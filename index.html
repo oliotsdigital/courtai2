@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Streamlit on Cloudflare Pages</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.9.2/build/stlite.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@1.9.2/build/stlite.js";
+      mount(
+        {
+          entrypoint: "app.py",
+          files: {
+            "app.py": `
+import streamlit as st
+st.title("Hello from Cloudflare Pages!")
+st.write("This Python app is running entirely in the browser.")
+            `,
+          },
+          requirements: ["pandas", "numpy"], // Add required pip packages here
+        },
+        document.getElementById("root")
+      );
+    </script>
+  </body>
+</html>
