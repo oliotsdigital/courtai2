@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Courtroom Real-Time Multilingual Dictation</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari", "Mangal", "Nirmala UI", "Devanagari MT", Roboto, Arial, sans-serif;
+    }
+    body {
+      background-color: transparent;
+      padding: 4px 2px 14px 2px;
+      color: #0F172A;
+    }
+    .recorder-card {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 14px 18px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .title-text {
+      color: #1B365D;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94A3B8;
+    }
+    .status-badge.listening {
+      background: #FEE2E2;
+      color: #991B1B;
+      border-color: #FECACA;
+    }
+    .status-badge.listening .status-dot {
+      background: #DC2626;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Controls bar */
+    .controls-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-mic {
+      background-color: #1B365D;
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease-in-out;
+    }
+    .btn-mic:hover {
+      background-color: #0F2042;
+    }
+    .btn-mic.active {
+      background-color: #DC2626;
+      animation: micPulse 1.5s infinite;
+    }
+    @keyframes micPulse {
+      0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+
+    .lang-select {
+      background-color: #FFFFFF;
+      color: #1E293B;
+      border: 1px solid #CBD5E1;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s ease-in-out;
+    }
+    .lang-select:focus {
+      border-color: #1B365D;
+    }
+
+    .btn-secondary {
+      background-color: #F8FAFC;
+      color: #334155;
+      border: 1px solid #CBD5E1;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease-in-out;
+    }
+    .btn-secondary:hover {
+      background-color: #E2E8F0;
+    }
+
+    /* Live Output Box */
+    .live-stream-box {
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      background: #FAFAFA;
+      padding: 12px 14px;
+      min-height: 110px;
+      max-height: 130px;
+      overflow-y: auto;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #0F172A;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: text;
+    }
+    .live-stream-box:focus {
+      outline: 2px solid #93C5FD;
+      background: #FFFFFF;
+    }
+
+    .interim-text {
+      color: #94A3B8;
+      font-style: italic;
+    }
+
+    .empty-prompt {
+      color: #94A3B8;
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
+    .hint-row {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: #64748B;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="recorder-card">
+    <div class="header-row">
+      <div class="title-area">
+        <span style="font-size: 1.25rem;">⚡</span>
+        <span class="title-text">Live Courtroom Speech Dictation</span>
+      </div>
+      <div id="statusBadge" class="status-badge">
+        <span class="status-dot"></span>
+        <span id="statusLabel">Ready</span>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <button id="micBtn" class="btn-mic" onclick="toggleDictation()">
+        <span id="micIcon">🎙️</span>
+        <span id="micText">Start Live Dictation</span>
+      </button>
+
+      <!-- Language Switcher for Typing Engine -->
+      <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)" title="Choose spoken transcription language">
+        <option value="en-IN">🇬🇧 English (India)</option>
+        <option value="hi-IN">🇮🇳 हिन्दी (Hindi)</option>
+        <option value="mr-IN">🇮🇳 मराठी (Marathi)</option>
+      </select>
+
+      <button id="copyBtn" class="btn-secondary" onclick="copyToClipboard()">
+        <span>📋</span> Copy to Record
+      </button>
+      <button class="btn-secondary" onclick="clearLiveText()">
+        <span>🧹</span> Clear Live Box
+      </button>
+    </div>
+
+    <div id="liveStream" class="live-stream-box">
+      <span id="emptyPrompt" class="empty-prompt">Press 'Start Live Dictation' and begin speaking. Spoken words will print here in real-time as you talk...</span>
+    </div>
+
+    <div class="hint-row">
+      <span id="voiceCommandHint">Voice commands: <i>"full stop"</i> → . &nbsp;|&nbsp; <i>"comma"</i> → , &nbsp;|&nbsp; <i>"next paragraph"</i> → paragraph break</span>
+      <span id="legalHint">Legal terms automatically normalized</span>
+    </div>
+  </div>
+
+  <script>
+    let isListening = false;
+    let recognition = null;
+    let finalizedText = "";
+    let interimText = "";
+    
+    // Default language injected or set to Indian English
+    let injectedLang = "__DEFAULT_LANG__";
+    let languageCode = (injectedLang && injectedLang.indexOf("__DEFAULT") === -1) ? injectedLang : "en-IN";
+
+    const promptsByLang = {
+      "en-IN": "Press 'Start Live Dictation' and begin speaking in English. Spoken words will print here in real-time as you talk...",
+      "hi-IN": "बोलना शुरू करने के लिए 'Start Live Dictation' दबाएं। आपके बोले गए शब्द देवनागरी में रीयल-टाइम टाइप होंगे...",
+      "mr-IN": "'Start Live Dictation' वर क्लिक करून बोला. तुमचे उच्चारलेले शब्द मराठीत तत्काळ स्क्रीनवर टाईप होतील..."
+    };
+
+    const hintsByLang = {
+      "en-IN": "Voice commands: <i>\"full stop\"</i> → . &nbsp;|&nbsp; <i>\"comma\"</i> → , &nbsp;|&nbsp; <i>\"next paragraph\"</i> → paragraph break",
+      "hi-IN": "आवाज आदेश: <i>\"पूर्ण विराम\"</i> → . &nbsp;|&nbsp; <i>\"अल्प विराम\"</i> → , &nbsp;|&nbsp; <i>\"नया पैराग्राफ\"</i> → पैराग्राफ ब्रेक",
+      "mr-IN": "व्हॉईस कमांड्स: <i>\"पूर्ण विराम\"</i> → . &nbsp;|&nbsp; <i>\"स्वल्पविराम / अल्पविराम\"</i> → , &nbsp;|&nbsp; <i>\"नवीन परिच्छेद\"</i> → परिच्छेद ब्रेक"
+    };
+
+    const legalHintsByLang = {
+      "en-IN": "Terms normalized: Section 144, CPC, CrPC, Hon'ble Court",
+      "hi-IN": "शब्दावली: धारा 144, सीपीसी, सीआरपीसी, माननीय न्यायालय, विद्वान अधिवक्ता",
+      "mr-IN": "शब्दावली: कलम 144, सीपीसी, सीआरपीसी, नामदार न्यायालय, विद्वान वकील"
+    };
+
+    window.addEventListener("DOMContentLoaded", function() {
+      const select = document.getElementById("langSelect");
+      if (select && languageCode) {
+        select.value = languageCode;
+      }
+      updateLanguageUIElements();
+      updateUI();
+    });
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function initRecognition() {
+      if (!SpeechRecognition) {
+        alert("Web Speech API is not supported in this browser. Please use Google Chrome, Brave, Edge, or Safari.");
+        return null;
+      }
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = languageCode;
+
+      rec.onstart = function() {
+        isListening = true;
+        updateUI();
+      };
+
+      rec.onresult = function(event) {
+        interimText = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const chunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            const processedChunk = applyLiveVoiceAndLegalRules(chunk);
+            if (finalizedText && !finalizedText.endsWith("\n") && !finalizedText.endsWith(" ")) {
+              finalizedText += " " + processedChunk;
+            } else {
+              finalizedText += processedChunk;
+            }
+            syncToParentIfPossible();
+          } else {
+            interimText += chunk;
+          }
+        }
+        renderLiveDisplay();
+      };
+
+      rec.onerror = function(event) {
+        console.warn("Speech recognition error:", event.error);
+        if (event.error === "not-allowed") {
+          alert("Microphone access was denied. Please allow microphone permission in your browser address bar.");
+          stopDictation();
+        }
+      };
+
+      rec.onend = function() {
+        if (isListening) {
+          try { rec.start(); } catch(e) {}
+        } else {
+          updateUI();
+        }
+      };
+
+      return rec;
+    }
+
+    function changeLanguage(newLang) {
+      languageCode = newLang;
+      updateLanguageUIElements();
+      if (recognition) {
+        recognition.lang = newLang;
+        if (isListening) {
+          try { recognition.stop(); } catch(e) {}
+          setTimeout(() => {
+            try { recognition.start(); } catch(e) {}
+          }, 200);
+        }
+      }
+      updateUI();
+      renderLiveDisplay();
+    }
+
+    function updateLanguageUIElements() {
+      const hint = document.getElementById("voiceCommandHint");
+      const legal = document.getElementById("legalHint");
+      if (hint && hintsByLang[languageCode]) {
+        hint.innerHTML = hintsByLang[languageCode];
+      }
+      if (legal && legalHintsByLang[languageCode]) {
+        legal.innerText = legalHintsByLang[languageCode];
+      }
+    }
+
+    function toggleDictation() {
+      if (isListening) {
+        stopDictation();
+      } else {
+        startDictation();
+      }
+    }
+
+    function startDictation() {
+      if (!recognition) {
+        recognition = initRecognition();
+      }
+      if (recognition) {
+        recognition.lang = languageCode;
+        try {
+          recognition.start();
+          isListening = true;
+          updateUI();
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    }
+
+    function stopDictation() {
+      isListening = false;
+      if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+      }
+      updateUI();
+      syncToParentIfPossible();
+    }
+
+    function updateUI() {
+      const btn = document.getElementById("micBtn");
+      const icon = document.getElementById("micIcon");
+      const text = document.getElementById("micText");
+      const badge = document.getElementById("statusBadge");
+      const label = document.getElementById("statusLabel");
+
+      const langNames = {
+        "en-IN": "English",
+        "hi-IN": "Hindi (हिन्दी)",
+        "mr-IN": "Marathi (मराठी)"
+      };
+      const activeLang = langNames[languageCode] || "English";
+
+      if (isListening) {
+        btn.classList.add("active");
+        icon.innerText = "⏹️";
+        text.innerText = "Stop Dictation";
+        badge.className = "status-badge listening";
+        label.innerText = "Listening (" + activeLang + ")...";
+      } else {
+        btn.classList.remove("active");
+        icon.innerText = "🎙️";
+        text.innerText = "Start Live Dictation";
+        badge.className = "status-badge";
+        label.innerText = "Ready (" + activeLang + ")";
+      }
+    }
+
+    function renderLiveDisplay() {
+      const container = document.getElementById("liveStream");
+      if (!finalizedText && !interimText) {
+        const promptText = promptsByLang[languageCode] || promptsByLang["en-IN"];
+        container.innerHTML = '<span class="empty-prompt">' + promptText + '</span>';
+        return;
+      }
+
+      let html = escapeHtml(finalizedText);
+      if (interimText) {
+        html += ' <span class="interim-text">' + escapeHtml(interimText) + '</span>';
+      }
+      container.innerHTML = html;
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function clearLiveText() {
+      finalizedText = "";
+      interimText = "";
+      renderLiveDisplay();
+      syncToParentIfPossible();
+    }
+
+    function copyToClipboard() {
+      const fullText = (finalizedText + (interimText ? " " + interimText : "")).trim();
+      if (!fullText) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullText).then(() => {
+          const btn = document.getElementById("copyBtn");
+          btn.innerHTML = "<span>✅</span> Copied!";
+          setTimeout(() => { btn.innerHTML = "<span>📋</span> Copy to Record"; }, 2000);
+        });
+      }
+      syncToParentIfPossible();
+    }
+
+    function syncToParentIfPossible() {
+      const fullText = (finalizedText + (interimText ? " " + interimText : "")).trim();
+      if (!fullText) return;
+      try {
+        const textareas = window.parent.document.querySelectorAll("textarea");
+        if (textareas && textareas.length > 0) {
+          const ta = textareas[0];
+          const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+          nativeSetter.call(ta, fullText);
+          ta.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      } catch(e) {}
+    }
+
+    // Convert Devanagari numerals (०-९) to Arabic numerals (0-9)
+    function devanagariDigitsToArabic(str) {
+      const devDigits = "०१२३४५६७८९";
+      return str.replace(/[०-९]/g, d => devDigits.indexOf(d));
+    }
+
+    // Live Voice Commands and Legal Normalization (English, Hindi, Marathi)
+    // Note: Uses unicode-safe non-boundary patterns because JS \b does not match Devanagari.
+    function applyLiveVoiceAndLegalRules(text) {
+      if (!text) return "";
+      let t = text;
+
+      // 1. Paragraph and newlines (English, Hindi, Marathi)
+      t = t.replace(/(?:^|\s)(?:next\s+paragraph|new\s+paragraph|paragraph\s+break|नवीन\s*परिच्छेद|पुढील\s*परिच्छेद|नवा\s*परिच्छेद|नया\s*पैराग्राफ|अगला\s*पैराग्राफ)(?=\s|$)/giu, "\n\n");
+      t = t.replace(/(?:^|\s)(?:new\s+line|next\s+line|नवीन\s*ओळ|पुढील\s*ओळ|नई\s*लाइन|अगली\s*लाइन)(?=\s|$)/giu, "\n");
+
+      // 2. Punctuation commands (English, Hindi, Marathi)
+      t = t.replace(/(?:^|\s)(?:full\s+stop|period|पूर्ण\s*विराम|पूर्णविराम|फुल\s*स्टॉप)(?=\s|[.,;:?!]|$)/giu, ".");
+      t = t.replace(/(?:^|\s)(?:comma|अल्प\s*विराम|अल्पविराम|स्वल्प\s*विराम|स्वल्पविराम|कॉमा)(?=\s|[.,;:?!]|$)/giu, ",");
+      t = t.replace(/(?:^|\s)(?:colon|अपूर्ण\s*विराम|कोलन)(?=\s|[.,;:?!]|$)/giu, ":");
+      t = t.replace(/(?:^|\s)(?:semicolon|अर्ध\s*विराम|अर्धविराम)(?=\s|[.,;:?!]|$)/giu, ";");
+      t = t.replace(/(?:^|\s)(?:question\s+mark|प्रश्न\s*चिन्ह|प्रश्नचिन्ह)(?=\s|[.,;:?!]|$)/giu, "?");
+      t = t.replace(/(?:^|\s)(?:exclamation\s+(?:mark|point)|उद्गार\s*चिन्ह|उद्गारवाचक\s*चिन्ह|विस्मयादिबोधक\s*चिन्ह)(?=\s|[.,;:?!]|$)/giu, "!");
+
+      // 3. Quotes
+      t = t.replace(/(?:^|\s)(?:open\s+quote|quote\s+open|उद्धरण\s*चिन्ह|अवतरण\s*चिन्ह)(?=\s|$)/giu, ' "');
+      t = t.replace(/(?:^|\s)(?:close\s+quote|quote\s+close)(?=\s|$)/giu, '" ');
+
+      // 4. Statutory sections based on language
+      if (languageCode === "mr-IN") {
+        // Marathi statutory terms: कलम 144, कलम 420, इत्यादी
+        t = t.replace(/(?:कलम|सेक्शन)\s*([०-९0-9]+)/giu, (m, num) => "कलम " + devanagariDigitsToArabic(num));
+        t = t.replace(/(?:कलम|सेक्शन)\s*(?:एकशे\s*चव्वेचाळीस|एक\s*शे\s*चव्वेचाळीस)/giu, "कलम 144");
+        t = t.replace(/(?:कलम|सेक्शन)\s*(?:चारशे\s*वीस|चार\s*शे\s*वीस)/giu, "कलम 420");
+        t = t.replace(/(?:कलम|सेक्शन)\s*(?:तीनशे\s*दोन|तीन\s*शे\s*दोन)/giu, "कलम 302");
+        t = t.replace(/(?:कलम|सेक्शन)\s*(?:एकशे\s*अडतीस|एक\s*शे\s*अडतीस)/giu, "कलम 138");
+        t = t.replace(/(?:कलम|सेक्शन)\s*(?:चारशे\s*ब्याऐंशी|चार\s*शे\s*ब्याऐंशी)/giu, "कलम 482");
+
+        // Marathi court honorifics
+        t = t.replace(/(?:^|\s)(?:माननीय\s+न्यायालय|नामदार\s+कोर्ट|नामदार\s+न्यायालय)(?=\s|[.,;:?!]|$)/giu, " नामदार न्यायालय");
+        t = t.replace(/(?:^|\s)(?:विद्वान\s+वकील|विद्वान\s+अधिवक्ता)(?=\s|[.,;:?!]|$)/giu, " विद्वान वकील");
+        t = t.replace(/(?:^|\s)(?:विद्वान\s+वरिष्ठ\s+वकील)(?=\s|[.,;:?!]|$)/giu, " विद्वान वरिष्ठ वकील");
+      } else if (languageCode === "hi-IN") {
+        // Hindi statutory terms: धारा 144, धारा 420, आदि
+        t = t.replace(/(?:धारा|सेक्शन)\s*([०-९0-9]+)/giu, (m, num) => "धारा " + devanagariDigitsToArabic(num));
+        t = t.replace(/(?:धारा|सेक्शन)\s*(?:एक\s*सौ\s*चवालीस|एक\s*सौ\s*चौवालीस)/giu, "धारा 144");
+        t = t.replace(/(?:धारा|सेक्शन)\s*(?:चार\s*सौ\s*बीस)/giu, "धारा 420");
+        t = t.replace(/(?:धारा|सेक्शन)\s*(?:तीन\s*सौ\s*दो)/giu, "धारा 302");
+        t = t.replace(/(?:धारा|सेक्शन)\s*(?:एक\s*सौ\s*अड़तीस|एक\s*सौ\s*अडतीस)/giu, "धारा 138");
+        t = t.replace(/(?:धारा|सेक्शन)\s*(?:चार\s*सौ\s*बयासी)/giu, "धारा 482");
+
+        // Hindi court honorifics
+        t = t.replace(/(?:^|\s)(?:माननीय\s+न्यायालय|माननीय\s+कोर्ट)(?=\s|[.,;:?!]|$)/giu, " माननीय न्यायालय");
+        t = t.replace(/(?:^|\s)(?:विद्वान\s+अधिवक्ता|विद्वान\s+वकील)(?=\s|[.,;:?!]|$)/giu, " विद्वान अधिवक्ता");
+        t = t.replace(/(?:^|\s)(?:विद्वान\s+वरिष्ठ\s+अधिवक्ता)(?=\s|[.,;:?!]|$)/giu, " विद्वान वरिष्ठ अधिवक्ता");
+      } else {
+        // English statutory terms
+        t = t.replace(/\b(?:section\s+one\s+forty[- ]?four)\b/gi, "Section 144");
+        t = t.replace(/\b(?:section\s+four\s+twenty)\b/gi, "Section 420");
+        t = t.replace(/\b(?:section\s+(?:three\s+zero\s+two|three\s+hundred\s+and\s+two))\b/gi, "Section 302");
+        t = t.replace(/\b(?:section\s+one\s+thirty[- ]?eight)\b/gi, "Section 138");
+        t = t.replace(/\bsection\s+(\d+[A-Z]?)\b/gi, "Section $1");
+        t = t.replace(/\barticle\s+(\d+[A-Z]?)\b/gi, "Article $1");
+
+        // English court honorifics
+        t = t.replace(/\b(?:honourable\s+court|honorable\s+court|hon'ble\s+court)\b/gi, "Hon'ble Court");
+        t = t.replace(/\b(?:learned\s+counsel)\b/gi, "Learned Counsel");
+        t = t.replace(/\b(?:learned\s+senior\s+counsel)\b/gi, "Learned Senior Counsel");
+        t = t.replace(/\bapplicant\b/gi, "Applicant");
+        t = t.replace(/\brespondent\b/gi, "Respondent");
+        t = t.replace(/\bpetitioner\b/gi, "Petitioner");
+      }
+
+      // 5. Legal Acronyms
+      if (languageCode === "mr-IN" || languageCode === "hi-IN") {
+        t = t.replace(/(?:^|\s)(?:सी\.?\s*पी\.?\s*सी\.?|सी\s+पी\s+सी|सीपीसी)(?=\s|[.,;:?!]|$)/giu, " सीपीसी");
+        t = t.replace(/(?:^|\s)(?:सी\.?\s*आर\.?\s*पी\.?\s*सी\.?|सी\s*आर\s*पी\s*सी|सीआरपीसी)(?=\s|[.,;:?!]|$)/giu, " सीआरपीसी");
+        t = t.replace(/(?:^|\s)(?:आई\.?\s*पी\.?\s*सी\.?|आय\.?\s*पी\.?\s*सी\.?|आईपीसी|आयपीसी)(?=\s|[.,;:?!]|$)/giu, " आईपीसी");
+        t = t.replace(/(?:^|\s)(?:बी\.?\s*एन\.?\s*एस\.?|बी\s*एन\s*एस|बीएनएस)(?=\s|[.,;:?!]|$)/giu, " बीएनएस");
+        t = t.replace(/(?:^|\s)(?:बी\.?\s*एन\.?\s*एस\.?\s*एस\.?|बीएनएसएस)(?=\s|[.,;:?!]|$)/giu, " बीएनएसएस");
+        t = t.replace(/(?:^|\s)(?:बी\.?\s*एस\.?\s*ए\.?|बीएसए)(?=\s|[.,;:?!]|$)/giu, " बीएसए");
+      } else {
+        t = t.replace(/\b(?:c\.?\s*p\.?\s*c\.?|c\s+p\s+c)\b/gi, "CPC");
+        t = t.replace(/\b(?:cr\.?\s*p\.?\s*c\.?|cr\s+p\s+c)\b/gi, "CrPC");
+        t = t.replace(/\b(?:i\.?\s*p\.?\s*c\.?|i\s+p\s+c)\b/gi, "IPC");
+        t = t.replace(/\b(?:b\.?\s*n\.?\s*s\.?|b\s+n\s+s)\b/gi, "BNS");
+        t = t.replace(/\b(?:b\.?\s*n\.?\s*s\.?\s*s\.?|b\s+n\s+s\s+s)\b/gi, "BNSS");
+        t = t.replace(/\b(?:b\.?\s*s\.?\s*a\.?|b\s+s\s+a)\b/gi, "BSA");
+      }
+
+      // 6. Formatting cleanup: remove spaces before punctuation
+      t = t.replace(/\s+([.,;:?!])/g, "$1");
+      t = t.replace(/([.,;:?!])([A-Za-z0-9\u0900-\u097F])/g, "$1 $2");
+
+      // 7. Capitalize first letter after punctuation or newline (for Latin characters)
+      t = t.replace(/^(\s*)([a-z])/, (m, p, c) => p + c.toUpperCase());
+      t = t.replace(/([.?!]\s+)([a-z])/g, (m, p, c) => p + c.toUpperCase());
+      t = t.replace(/(\n+)([a-z])/g, (m, p, c) => p + c.toUpperCase());
+
+      return t;
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

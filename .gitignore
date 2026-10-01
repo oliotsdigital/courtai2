@@ -1,0 +1,68 @@
+# Environment variables & secrets
+.env
+.env*.local
+*.env
+!.env.example
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Temporary generated test exports and media
+*.wav
+*.mp3
+*.m4a
+*.webm
+*.ogg
+Court_Transcript_*.docx
+Court_Transcript_*.pdf
+Court_Proceedings_*.docx
+Court_Proceedings_*.pdf
+Draft_Proceedings_*.docx
+Draft_Proceedings_*.pdf
