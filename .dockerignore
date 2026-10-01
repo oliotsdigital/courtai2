@@ -1,0 +1,17 @@
+.venv
+venv
+ENV
+env
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+.env
+.env.local
+.DS_Store
+*.swp
+*.bak
+training/
+scratch/
