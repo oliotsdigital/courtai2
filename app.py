@@ -201,6 +201,37 @@ st.markdown(
         border-radius: 3px;
         margin-left: 6px;
     }
+
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 768px) {
+        .court-header {
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .court-title-group h1 {
+            font-size: 1.35rem;
+        }
+        .court-subtitle {
+            font-size: 0.82rem;
+        }
+        .status-bar {
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            font-size: 0.78rem;
+            padding: 6px 10px;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 4px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            font-size: 0.82rem;
+            padding: 6px 8px;
+        }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -453,7 +484,7 @@ with col_main:
         active_bcp47 = lang_bcp47_map.get(language_choice, "en-IN")
         live_html = live_html.replace("__DEFAULT_LANG__", active_bcp47)
 
-        components.html(live_html, height=270, scrolling=False)
+        components.html(live_html, height=360, scrolling=True)
         st.markdown(
             "<div style='font-size: 0.82rem; color: #64748B; margin-top: -4px; margin-bottom: 8px;'>"
             "💡 <i>Tip: Click <b>📋 Copy to Record</b> on the card above to copy your real-time transcript directly into the editor below for Word & PDF export.</i>"

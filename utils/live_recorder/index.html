@@ -184,6 +184,69 @@
       flex-wrap: wrap;
       gap: 6px;
     }
+
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 600px) {
+      body {
+        padding: 2px 0 6px 0;
+      }
+      .recorder-card {
+        padding: 10px 10px;
+        border-radius: 6px;
+      }
+      .header-row {
+        margin-bottom: 8px;
+        gap: 6px;
+      }
+      .title-text {
+        font-size: 0.95rem;
+      }
+      .status-badge {
+        font-size: 0.72rem;
+        padding: 2px 6px;
+      }
+      .controls-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .btn-mic {
+        grid-column: 1 / 2;
+        padding: 8px 6px;
+        font-size: 0.82rem;
+        justify-content: center;
+        width: 100%;
+        white-space: nowrap;
+      }
+      .lang-select {
+        grid-column: 2 / 3;
+        padding: 8px 4px;
+        font-size: 0.78rem;
+        width: 100%;
+      }
+      .btn-secondary {
+        padding: 7px 6px;
+        font-size: 0.78rem;
+        justify-content: center;
+        width: 100%;
+        white-space: nowrap;
+      }
+      .live-stream-box {
+        min-height: 95px;
+        max-height: 130px;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        padding: 8px 10px;
+      }
+      .hint-row {
+        margin-top: 6px;
+        font-size: 0.7rem;
+        line-height: 1.35;
+        gap: 3px;
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
@@ -570,6 +633,23 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+    }
+
+    function notifyFrameHeight() {
+      try {
+        const card = document.querySelector(".recorder-card");
+        const h = (card ? card.offsetHeight : document.body.scrollHeight) + 18;
+        window.parent.postMessage({
+          type: "streamlit:setFrameHeight",
+          height: Math.max(h, 300)
+        }, "*");
+      } catch(e) {}
+    }
+
+    window.addEventListener("load", notifyFrameHeight);
+    window.addEventListener("resize", notifyFrameHeight);
+    if (window.ResizeObserver) {
+      new ResizeObserver(notifyFrameHeight).observe(document.body);
     }
   </script>
 </body>
