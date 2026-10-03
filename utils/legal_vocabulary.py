@@ -1,17 +1,30 @@
 """
-Legal Vocabulary and Normalization for Courtroom Speech-to-Text.
+Legal Vocabulary and Normalization for Courtroom Judicial Stenographer.
 
 Contains curated legal terms, statutes, codes, and procedural terminology
-in English, Hindi, and Marathi, along with conservative normalization rules
-to preserve fidelity while correcting common speech-to-text legal misinterpretations.
+in English, Marathi, and Hindi.
+STRICT RULE:
+- Transcribe verbatim as spoken without any cross-language translation.
+- Spoken English is typed in English (Latin alphabet).
+- Spoken Marathi is typed in Marathi (Devanagari script).
+- Spoken Hindi is typed in Hindi (Devanagari script).
+- Mixed code-switching is typed in mixed scripts verbatim.
 """
 
 import re
 from typing import Dict, List, Optional, Tuple
 
-# Curated list of Indian and Common-Law legal terminology
+# Curated list of Indian courtroom terminology
 LEGAL_TERMS_EN: List[str] = [
-    # Parties & Roles
+    # Judge & Bench
+    "Hon'ble Court",
+    "Honourable Court",
+    "Presiding Officer",
+    "Judge",
+    "Magistrate",
+    "Registrar",
+    
+    # Parties & Counsel
     "Applicant",
     "Respondent",
     "Petitioner",
@@ -27,11 +40,6 @@ LEGAL_TERMS_EN: List[str] = [
     "Learned Senior Counsel",
     "Public Prosecutor",
     "Amicus Curiae",
-    "Presiding Officer",
-    "Magistrate",
-    "Registrar",
-    "Hon'ble Court",
-    "Honourable Court",
     
     # Filings & Pleadings
     "Affidavit",
@@ -45,19 +53,14 @@ LEGAL_TERMS_EN: List[str] = [
     "Caveat",
     "Submissions",
     "Rejoinder",
-    "Sur-rejoinder",
     "Exhibit",
     "Evidence",
     "Deposition",
-    "Examination-in-chief",
-    "Cross-examination",
-    "Re-examination",
     
-    # Proceedings & Dispositions
-    "Hearing",
-    "Proceedings",
-    "Judgment",
+    # Orders & Dispositions
+    "Oral Dictation",
     "Order",
+    "Judgment",
     "Decree",
     "Injunction",
     "Interim Relief",
@@ -65,11 +68,7 @@ LEGAL_TERMS_EN: List[str] = [
     "Bail",
     "Anticipatory Bail",
     "Adjournment",
-    "Quashment",
-    "Cognizance",
-    "Chargesheet",
-    "First Information Report",
-    "FIR",
+    "Adjourned",
     
     # Statutory Codes & Acts
     "CPC",
@@ -86,23 +85,6 @@ LEGAL_TERMS_EN: List[str] = [
     "Bharatiya Sakshya Adhiniyam",
     "Constitution of India",
     "Negotiable Instruments Act",
-    "Arbitration and Conciliation Act",
-    "Specific Relief Act",
-    "Limitation Act",
-    "Evidence Act",
-    
-    # Courts & Jurisdictions
-    "Supreme Court",
-    "Supreme Court of India",
-    "High Court",
-    "District Court",
-    "Sessions Court",
-    "Metropolitan Magistrate",
-    "Chief Judicial Magistrate",
-    "Civil Judge",
-    "Family Court",
-    "Tribunal",
-    "Commercial Court",
     
     # Common Statutory Provisions
     "Section 144",
@@ -110,75 +92,85 @@ LEGAL_TERMS_EN: List[str] = [
     "Section 302",
     "Section 138",
     "Section 482",
+    "Section 439",
     "Section 9",
-    "Section 11",
-    "Section 34",
     "Article 226",
     "Article 32",
     "Article 21",
     "Order 39 Rule 1",
     "Order 39 Rule 2",
-    "Order 7 Rule 11",
-]
-
-# Curated Hindi and Marathi courtroom terms
-LEGAL_TERMS_HI: List[str] = [
-    "माननीय न्यायालय", "आवेदक", "प्रतिवादी", "याचिकाकर्ता", "अधिवक्ता", "विद्वान अधिवक्ता",
-    "विद्वान वरिष्ठ अधिवक्ता", "लोक अभियोजक", "न्यायाधीश", "दंडाधिकारी", "शपथ पत्र",
-    "लिखित बयान", "याचिका", "दलीलें", "साक्ष्य", "कार्यवाही", "जमानत", "अग्रिम जमानत",
-    "अंतरिम राहत", "स्थगन", "आदेश", "निर्णय", "धारा 144", "धारा 420", "धारा 302",
-    "धारा 138", "धारा 482", "सीपीसी", "सीआरपीसी", "आईपीसी", "बीएनएस", "बीएनएसएस", "बीएसए",
-    "दीवानी प्रक्रिया संहिता", "दंड प्रक्रिया संहिता", "भारतीय संविधान", "उच्च न्यायालय", "सर्वोच्च न्यायालय"
 ]
 
 LEGAL_TERMS_MR: List[str] = [
-    "नामदार न्यायालय", "माननीय न्यायालय", "अर्जदार", "प्रतिवादी", "याचिकाकर्ता", "वकील",
-    "विद्वान वकील", "विद्वान वरिष्ठ वकील", "सरकारी वकील", "न्यायाधीश", "दंडाधिकारी",
-    "प्रतिज्ञापत्र", "लेखी जबाब", "अर्ज", "युक्तिवाद", "पुरावा", "कामकाज", "जामीन",
-    "अगाऊ जामीन", "अंतरिम दिलासा", "तहकूब", "आदेश", "निकाल", "कलम 144", "कलम 420",
-    "कलम 302", "कलम 138", "कलम 482", "सीपीसी", "सीआरपीसी", "आयपीसी", "बीएनएस", "बीएनएसएस", "बीएसए",
+    "नामदार न्यायालय", "माननीय न्यायालय", "न्यायाधीश", "दंडाधिकारी", "अर्जदार", "प्रतिवादी",
+    "याचिकाकर्ता", "आरोपी", "तक्रारदार", "साक्षीदार", "वकील", "विद्वान वकील", "विद्वान वरिष्ठ वकील",
+    "सरकारी वकील", "प्रतिज्ञापत्र", "लेखी जबाब", "अर्ज", "युक्तिवाद", "पुरावा", "कामकाज",
+    "मौखिक आदेश", "आदेश", "निकाल", "जामीन", "अगाऊ जामीन", "अंतरिम दिलासा", "तहकूब",
+    "कलम 144", "कलम 420", "कलम 302", "कलम 138", "कलम 482", "कलम 439",
+    "सीपीसी", "सीआरपीसी", "आयपीसी", "बीएनएस", "बीएनएसएस", "बीएसए",
     "दिवाणी प्रक्रिया संहिता", "फौजदारी प्रक्रिया संहिता", "भारतीय संविधान", "उच्च न्यायालय", "सर्वोच्च न्यायालय"
 ]
 
-LEGAL_TERMS: List[str] = LEGAL_TERMS_EN + LEGAL_TERMS_HI + LEGAL_TERMS_MR
+LEGAL_TERMS_HI: List[str] = [
+    "माननीय न्यायालय", "न्यायाधीश", "दंडाधिकारी", "आवेदक", "प्रतिवादी", "याचिकाकर्ता",
+    "अभियुक्त", "शिकायतकर्ता", "गवाह", "अधिवक्ता", "विद्वान अधिवक्ता", "विद्वान वरिष्ठ अधिवक्ता",
+    "लोक अभियोजक", "शपथ पत्र", "लिखित बयान", "याचिका", "दलीलें", "साक्ष्य", "कार्यवाही",
+    "मौखिक आदेश", "आदेश", "निर्णय", "जमानत", "अग्रिम जमानत", "अंतरिम राहत", "स्थगन",
+    "धारा 144", "धारा 420", "धारा 302", "धारा 138", "धारा 482", "धारा 439",
+    "सीपीसी", "सीआरपीसी", "आईपीसी", "बीएनएस", "बीएनएसएस", "बीएसए",
+    "दीवानी प्रक्रिया संहिता", "दंड प्रक्रिया संहिता", "भारतीय संविधान", "उच्च न्यायालय", "सर्वोच्च न्यायालय"
+]
+
+LEGAL_TERMS: List[str] = LEGAL_TERMS_EN + LEGAL_TERMS_MR + LEGAL_TERMS_HI
 
 
 def get_legal_prompt_context(language_code: Optional[str] = None) -> str:
     """
-    Constructs a concise legal prompt to provide context to the OpenAI Audio API.
-    OpenAI audio transcription models use the prompt parameter to prime
-    correct spelling of domain-specific proper nouns, acronyms, and legal terminology
-    in English, Hindi, or Marathi based on the selected language.
+    Constructs a concise legal prompt for the OpenAI Audio API.
+    CRITICAL STENOGRAPHY INSTRUCTION:
+    - Never translate.
+    - Spoken English is typed in English.
+    - Spoken Marathi is typed in Marathi (Devanagari).
+    - Spoken Hindi is typed in Hindi (Devanagari).
+    - Mixed language is typed verbatim in both scripts.
     """
     lang = (language_code or "").lower()
-    
-    if "hi" in lang:
+
+    if lang in ("mr", "mr-in"):
         return (
-            "न्यायालयीन कार्यवाही प्रतिलेख: माननीय न्यायालय, आवेदक, प्रतिवादी, याचिकाकर्ता, "
-            "विद्वान अधिवक्ता, शपथ पत्र, दलीलें, साक्ष्य, कार्यवाही, धारा 144, धारा 420, धारा 302, "
-            "धारा 138, धारा 482, सीपीसी, सीआरपीसी, आईपीसी, बीएनएस, बीएनएसएस, बीएसए, "
-            "दीवानी प्रक्रिया संहिता, दंड प्रक्रिया संहिता, भारतीय संविधान, उच्च न्यायालय, "
-            "सर्वोच्च न्यायालय, जिला न्यायालय, जमानत, अंतरिम राहत, आदेश, निर्णय।"
+            "न्यायाधीशांचे मौखिक डिक्टेशन / न्यायालयीन कामकाज प्रतिलेख: नामदार न्यायालय, अर्जदार, प्रतिवादी, "
+            "विद्वान वकील, प्रतिज्ञापत्र, युक्तिवाद, पुरावा, कलम 144, कलम 420, कलम 302, कलम 138, कलम 482, कलम 439, "
+            "सीपीसी, सीआरपीसी, आयपीसी, बीएनएस, जामीन मंजूर, अंतरिम दिलासा, आदेश, निकाल. "
+            "Strict instruction: Transcribe exactly as spoken without translation. Marathi in Devanagari, English in English."
         )
-    elif "mr" in lang:
+    elif lang in ("hi", "hi-in"):
         return (
-            "न्यायालयीन कामकाज प्रतिलेख: नामदार न्यायालय, माननीय न्यायालय, अर्जदार, प्रतिवादी, "
-            "याचिकाकर्ता, विद्वान वकील, प्रतिज्ञापत्र, युक्तिवाद, पुरावा, कामकाज, कलम 144, "
-            "कलम 420, कलम 302, कलम 138, कलम 482, सीपीसी, सीआरपीसी, आयपीसी, बीएनएस, बीएनएसएस, "
-            "बीएसए, दिवाणी प्रक्रिया संहिता, फौजदारी प्रक्रिया संहिता, भारतीय संविधान, "
-            "उच्च न्यायालय, सर्वोच्च न्यायालय, जिल्हा न्यायालय, जामीन, अंतरिम दिलासा, आदेश, निकाल."
+            "न्यायाधीश महोदय का मौखिक डिक्टेशन / न्यायालयीन कार्यवाही प्रतिलेख: माननीय न्यायालय, आवेदक, प्रतिवादी, "
+            "विद्वान अधिवक्ता, शपथ पत्र, दलीलें, साक्ष्य, धारा 144, धारा 420, धारा 302, धारा 138, धारा 482, "
+            "सीपीसी, सीआरपीसी, आईपीसी, बीएनएस, जमानत, अंतरिम राहत, आदेश, निर्णय। "
+            "Strict instruction: Transcribe exactly as spoken without translation. Hindi in Devanagari, English in English."
+        )
+    elif lang in ("en", "en-in"):
+        return (
+            "Verbatim judicial stenographer record of Judge's oral statement and court dictation: "
+            "Hon'ble Court, Judge, Order, Applicant, Respondent, Petitioner, Counsel, Learned Counsel, "
+            "Affidavit, Submissions, Exhibit, Proceedings, Section 144, Section 420, Section 302, Section 138, "
+            "CPC, CrPC, IPC, BNS, BNSS, BSA, Bail, Adjourned. Transcribe verbatim as spoken without translation."
         )
     else:
-        # Default English / Multilingual prompt
-        key_terms = [
-            "Applicant", "Respondent", "Petitioner", "Counsel", "Learned Counsel",
-            "Hon'ble Court", "Affidavit", "Submissions", "Exhibit", "Proceedings",
-            "Section 144", "Section 420", "Section 302", "Section 138", "Section 482",
-            "CPC", "CrPC", "IPC", "BNS", "BNSS", "BSA",
-            "Civil Procedure Code", "Criminal Procedure Code", "Constitution of India",
-            "High Court", "Supreme Court", "District Court", "Magistrate", "Order 39",
-        ]
-        return "Courtroom proceedings transcript: " + ", ".join(key_terms) + "."
+        # Mixed (English + Marathi / Hindi) - DEFAULT FOR INDIAN COURTS
+        return (
+            "Official judicial stenographer verbatim record of Judge's oral dictation and court proceedings. "
+            "CRITICAL RULE: Transcribe exactly as spoken without any translation. "
+            "Type English speech in English (Latin script). "
+            "Type Marathi speech in Marathi (Devanagari script). "
+            "Type Hindi speech in Hindi (Devanagari script). "
+            "If the Judge speaks mixed English and Marathi or switches languages, transcribe the mixed language verbatim. "
+            "Do NOT translate Marathi to English or English to Marathi. "
+            "Terms: Hon'ble Court, Order, Adjourned, Section 144, Section 420, Section 439, CPC, CrPC, IPC, BNS, Exhibit, "
+            "नामदार न्यायालय, अर्जदार, प्रतिवादी, विद्वान वकील, कलम 144, कलम 420, कलम 439, सीपीसी, सीआरपीसी, जामीन मंजूर, अंतरिम दिलासा, निकाल, "
+            "माननीय न्यायालय, आवेदक, धारा 144, जमानत."
+        )
 
 
 # Devanagari digits to Arabic mapping
@@ -197,59 +189,51 @@ def _replace_dev_digits(match: re.Match) -> str:
 
 def normalize_legal_terms(text: str, enabled: bool = True, language_code: Optional[str] = None) -> str:
     """
-    Applies safe, conservative legal terminology normalization to transcript output.
-    Does NOT blindly replace uncertain words. Standardizes statutory citations
-    and legal acronyms in English, Hindi, and Marathi.
-    
-    Examples:
-        - "Section one forty four" -> "Section 144"
-        - "कलम १४४" / "कलम 144" -> "कलम 144"
-        - "धारा १४४" / "धारा 144" -> "धारा 144"
-        - "C P C" or "c.p.c." -> "CPC"
-        - "honourable court" -> "Hon'ble Court"
-        - "माननीय कोर्ट" -> "माननीय न्यायालय"
+    Applies conservative legal formatting without translating across languages.
+    Preserves English in English, Marathi in Marathi, and Hindi in Hindi.
     """
     if not enabled or not text:
         return text
 
     normalized = text
-    lang = (language_code or "").lower()
 
-    # 1. Devanagari numerals normalization in statutory citations
-    # e.g. "धारा १४४" -> "धारा 144", "कलम १४४" -> "कलम 144"
-    normalized = re.sub(r"(धारा|कलम|सेक्शन)\s*([०-९]+)", _replace_dev_digits, normalized)
+    # 1. Standardize Devanagari numerals in section citations while preserving the language word
+    # e.g. "कलम १४४" -> "कलम 144", "धारा १४४" -> "धारा 144"
+    normalized = re.sub(r"(धारा|कलम)\s*([०-९]+)", _replace_dev_digits, normalized)
 
-    # 2. Marathi & Hindi Statutory Sections
-    if "mr" in lang:
-        mr_patterns: List[Tuple[re.Pattern, str]] = [
-            (re.compile(r"कलम\s*(?:एकशे\s*चव्वेचाळीस|एक\s*शे\s*चव्वेचाळीस)", re.IGNORECASE), "कलम 144"),
-            (re.compile(r"कलम\s*(?:चारशे\s*वीस|चार\s*शे\s*वीस)", re.IGNORECASE), "कलम 420"),
-            (re.compile(r"कलम\s*(?:तीनशे\s*दोन|तीन\s*शे\s*दोन)", re.IGNORECASE), "कलम 302"),
-            (re.compile(r"कलम\s*(?:एकशे\s*अडतीस|एक\s*शे\s*अडतीस)", re.IGNORECASE), "कलम 138"),
-            (re.compile(r"कलम\s*(?:चारशे\s*ब्याऐंशी|चार\s*शे\s*ब्याऐंशी)", re.IGNORECASE), "कलम 482"),
-            (re.compile(r"(?:नामदार\s+कोर्ट|माननीय\s+कोर्ट)", re.IGNORECASE), "नामदार न्यायालय"),
-            (re.compile(r"विद्वान\s+अधिवक्ता", re.IGNORECASE), "विद्वान वकील"),
-        ]
-        for pattern, replacement in mr_patterns:
-            normalized = pattern.sub(replacement, normalized)
+    # 2. Marathi Statutory Sections & Honorifics (NO translation to English)
+    mr_patterns: List[Tuple[re.Pattern, str]] = [
+        (re.compile(r"कलम\s*(?:एकशे\s*चव्वेचाळीस|एक\s*शे\s*चव्वेचाळीस)", re.IGNORECASE), "कलम 144"),
+        (re.compile(r"कलम\s*(?:चारशे\s*वीस|चार\s*शे\s*वीस)", re.IGNORECASE), "कलम 420"),
+        (re.compile(r"कलम\s*(?:तीनशे\s*दोन|तीन\s*शे\s*दोन)", re.IGNORECASE), "कलम 302"),
+        (re.compile(r"कलम\s*(?:एकशे\s*अडतीस|एक\s*शे\s*अडतीस)", re.IGNORECASE), "कलम 138"),
+        (re.compile(r"कलम\s*(?:चारशे\s*ब्याऐंशी|चार\s*शे\s*ब्याऐंशी)", re.IGNORECASE), "कलम 482"),
+        (re.compile(r"कलम\s*(?:चारशे\s*एकोणचाळीस|चार\s*शे\s*एकोणचाळीस)", re.IGNORECASE), "कलम 439"),
+        (re.compile(r"(?:नामदार\s+कोर्ट|माननीय\s+कोर्ट)", re.IGNORECASE), "नामदार न्यायालय"),
+        (re.compile(r"विद्वान\s+अधिवक्ता", re.IGNORECASE), "विद्वान वकील"),
+    ]
+    for pattern, replacement in mr_patterns:
+        normalized = pattern.sub(replacement, normalized)
 
-    elif "hi" in lang:
-        hi_patterns: List[Tuple[re.Pattern, str]] = [
-            (re.compile(r"धारा\s*(?:एक\s*सौ\s*चवालीस|एक\s*सौ\s*चौवालीस)", re.IGNORECASE), "धारा 144"),
-            (re.compile(r"धारा\s*(?:चार\s*सौ\s*बीस)", re.IGNORECASE), "धारा 420"),
-            (re.compile(r"धारा\s*(?:तीन\s*सौ\s*दो)", re.IGNORECASE), "धारा 302"),
-            (re.compile(r"धारा\s*(?:एक\s*सौ\s*अड़तीस|एक\s*सौ\s*अडतीस)", re.IGNORECASE), "धारा 138"),
-            (re.compile(r"धारा\s*(?:चार\s*सौ\s*बयासी)", re.IGNORECASE), "धारा 482"),
-            (re.compile(r"(?:माननीय\s+कोर्ट|नामदार\s+कोर्ट)", re.IGNORECASE), "माननीय न्यायालय"),
-        ]
-        for pattern, replacement in hi_patterns:
-            normalized = pattern.sub(replacement, normalized)
+    # 3. Hindi Statutory Sections & Honorifics (NO translation to English)
+    hi_patterns: List[Tuple[re.Pattern, str]] = [
+        (re.compile(r"धारा\s*(?:एक\s*सौ\s*चवालीस|एक\s*सौ\s*चौवालीस)", re.IGNORECASE), "धारा 144"),
+        (re.compile(r"धारा\s*(?:चार\s*सौ\s*बीस)", re.IGNORECASE), "धारा 420"),
+        (re.compile(r"धारा\s*(?:तीन\s*सौ\s*दो)", re.IGNORECASE), "धारा 302"),
+        (re.compile(r"धारा\s*(?:एक\s*सौ\s*अड़तीस|एक\s*सौ\s*अडतीस)", re.IGNORECASE), "धारा 138"),
+        (re.compile(r"धारा\s*(?:चार\s*सौ\s*बयासी)", re.IGNORECASE), "धारा 482"),
+        (re.compile(r"धारा\s*(?:चार\s*सौ\s*उनतालीस)", re.IGNORECASE), "धारा 439"),
+        (re.compile(r"(?:माननीय\s+कोर्ट|नामदार\s+कोर्ट)", re.IGNORECASE), "माननीय न्यायालय"),
+    ]
+    for pattern, replacement in hi_patterns:
+        normalized = pattern.sub(replacement, normalized)
 
-    # 3. Vernacular Legal Acronyms
+    # 4. Vernacular Legal Acronyms
     acronym_vernacular: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"(?:\b|^|\s)(?:सी\.?\s*पी\.?\s*सी\.?|सी\s+पी\s+सी|सीपीसी)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " सीपीसी"),
         (re.compile(r"(?:\b|^|\s)(?:सी\.?\s*आर\.?\s*पी\.?\s*सी\.?|सी\s*आर\s*पी\s*सी|सीआरपीसी)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " सीआरपीसी"),
-        (re.compile(r"(?:\b|^|\s)(?:आई\.?\s*पी\.?\s*सी\.?|आय\.?\s*पी\.?\s*सी\.?|आईपीसी|आयपीसी)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " आईपीसी"),
+        (re.compile(r"(?:\b|^|\s)(?:आय\.?\s*पी\.?\s*सी\.?|आयपीसी)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " आयपीसी"),
+        (re.compile(r"(?:\b|^|\s)(?:आई\.?\s*पी\.?\s*सी\.?|आईपीसी)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " आईपीसी"),
         (re.compile(r"(?:\b|^|\s)(?:बी\.?\s*एन\.?\s*एस\.?|बी\s*एन\s*एस|बीएनएस)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " बीएनएस"),
         (re.compile(r"(?:\b|^|\s)(?:बी\.?\s*एन\.?\s*एस\.?\s*एस\.?|बीएनएसएस)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " बीएनएसएस"),
         (re.compile(r"(?:\b|^|\s)(?:बी\.?\s*एस\.?\s*ए\.?|बीएसए)(?=\b|\s|[.,;:?!]|$)", re.IGNORECASE), " बीएसए"),
@@ -257,13 +241,14 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     for pattern, replacement in acronym_vernacular:
         normalized = pattern.sub(replacement, normalized)
 
-    # 4. English Statutory Sections - Common spoken forms
+    # 5. English Statutory Sections (NO translation to Marathi/Hindi)
     section_patterns: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"\b(?:section|sec\.?)\s+one\s+forty[- ]?four\b", re.IGNORECASE), "Section 144"),
         (re.compile(r"\b(?:section|sec\.?)\s+four\s+twenty\b", re.IGNORECASE), "Section 420"),
         (re.compile(r"\b(?:section|sec\.?)\s+(?:three\s+zero\s+two|three\s+hundred\s+(?:and\s+)?two)\b", re.IGNORECASE), "Section 302"),
         (re.compile(r"\b(?:section|sec\.?)\s+one\s+thirty[- ]?eight\b", re.IGNORECASE), "Section 138"),
         (re.compile(r"\b(?:section|sec\.?)\s+four\s+eighty[- ]?two\b", re.IGNORECASE), "Section 482"),
+        (re.compile(r"\b(?:section|sec\.?)\s+four\s+thirty[- ]?nine\b", re.IGNORECASE), "Section 439"),
         (re.compile(r"\bsection\s+(\d+[A-Z]?)\b", re.IGNORECASE), r"Section \1"),
         (re.compile(r"\bsec(?:tion)?\.?\s+(\d+[A-Z]?)\b", re.IGNORECASE), r"Section \1"),
         (re.compile(r"\barticle\s+(two\s+twenty[- ]?six|226)\b", re.IGNORECASE), "Article 226"),
@@ -272,11 +257,10 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
         (re.compile(r"\barticle\s+(\d+[A-Z]?)\b", re.IGNORECASE), r"Article \1"),
         (re.compile(r"\border\s+(\d+)\s+rule\s+(\d+)\b", re.IGNORECASE), r"Order \1 Rule \2"),
     ]
-
     for pattern, replacement in section_patterns:
         normalized = pattern.sub(replacement, normalized)
 
-    # 5. English Legal Acronyms
+    # 6. English Legal Acronyms
     acronym_patterns: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"\b(?:C\.?\s*P\.?\s*C\.?|c\s+p\s+c)\b", re.IGNORECASE), "CPC"),
         (re.compile(r"\b(?:Cr\.?\s*P\.?\s*C\.?|cr\s+p\s+c)\b", re.IGNORECASE), "CrPC"),
@@ -286,11 +270,10 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
         (re.compile(r"\b(?:B\.?\s*S\.?\s*A\.?|b\s+s\s+a)\b", re.IGNORECASE), "BSA"),
         (re.compile(r"\b(?:F\.?\s*I\.?\s*R\.?|f\s+i\s+r)\b", re.IGNORECASE), "FIR"),
     ]
-
     for pattern, replacement in acronym_patterns:
         normalized = pattern.sub(replacement, normalized)
 
-    # 6. Court honorifics in English
+    # 7. English Court Honorifics
     honorific_patterns: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"\b(?:honourable\s+court|honorable\s+court|hon'ble\s+court)\b", re.IGNORECASE), "Hon'ble Court"),
         (re.compile(r"\blearned\s+counsel\b", re.IGNORECASE), "Learned Counsel"),
@@ -299,8 +282,11 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
         (re.compile(r"\bpublic\s+prosecutor\b", re.IGNORECASE), "Public Prosecutor"),
         (re.compile(r"\bamicus\s+curiae\b", re.IGNORECASE), "Amicus Curiae"),
     ]
-
     for pattern, replacement in honorific_patterns:
         normalized = pattern.sub(replacement, normalized)
+
+    # 8. Clean up spaces around punctuation
+    normalized = re.sub(r"\s+([.,;:?!])", r"\1", normalized)
+    normalized = re.sub(r"([.,;:?!])([A-Za-z0-9\u0900-\u097F])", r"\1 \2", normalized)
 
     return normalized.strip()

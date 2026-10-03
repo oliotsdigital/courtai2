@@ -7,9 +7,10 @@ and draft legal notes generation.
 """
 
 import io
+import json
 import os
 import re
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import openai
 from openai import OpenAI
@@ -19,131 +20,207 @@ from utils.legal_vocabulary import get_legal_prompt_context, normalize_legal_ter
 DEFAULT_TRANSCRIPTION_MODEL = os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-live-transcribe")
 DEFAULT_FINAL_MODEL = os.getenv("OPENAI_FINAL_TRANSCRIPTION_MODEL", "gpt-transcribe")
 
+# Cache for compiled steno commands from JSON files
+_STENO_RULES_CACHE: Optional[List[Tuple[re.Pattern, str, str]]] = None
+
+# Conversational phrase guards to avoid false positive command replacements
+CONVERSATIONAL_GUARDS = [
+    # Full stop (e.g. came to a full stop)
+    (re.compile(r'(\b(?:a|an|the|complete)\s+)full\s+stop\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_FS§§'),
+    # Period (e.g. period of limitation, grace period)
+    (re.compile(r'(\b(?:a|an|the|this|that|grace|cooling|waiting)\s+)period\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_PR§§'),
+    (re.compile(r'\bperiod(\s+(?:of|for|in|from)\b)', re.IGNORECASE), lambda m: '§§GUARD_PR§§' + m.group(1)),
+    # Enter (e.g. did not enter into agreement, to enter appearance)
+    (re.compile(r'(\b(?:to|shall|did|not|will|cannot|may|might)\s+)enter\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_ENT§§'),
+    (re.compile(r'\benter(\s+(?:into|upon|appearance|plea)\b)', re.IGNORECASE), lambda m: '§§GUARD_ENT§§' + m.group(1)),
+    # Return (e.g. income tax return, return of plaint)
+    (re.compile(r'(\b(?:tax|income|in|to|shall|file|filing)\s+)return\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_RET§§'),
+    (re.compile(r'\breturn(\s+(?:of|to|from)\b)', re.IGNORECASE), lambda m: '§§GUARD_RET§§' + m.group(1)),
+    # Point (e.g. point of law, next point)
+    (re.compile(r'(\b(?:this|that|the|next|first|second|third|to)\s+)point\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_PT§§'),
+    (re.compile(r'\bpoint(\s+(?:of|out|for|is|raised)\b)', re.IGNORECASE), lambda m: '§§GUARD_PT§§' + m.group(1)),
+    # Colon (e.g. colon cancer, colon surgery)
+    (re.compile(r'\bcolon(\s+(?:cancer|surgery|cleanse)\b)', re.IGNORECASE), lambda m: '§§GUARD_CLN§§' + m.group(1)),
+]
+
+GUARD_RESTORATIONS = [
+    ('§§GUARD_FS§§', 'full stop'),
+    ('§§GUARD_PR§§', 'period'),
+    ('§§GUARD_ENT§§', 'enter'),
+    ('§§GUARD_RET§§', 'return'),
+    ('§§GUARD_PT§§', 'point'),
+    ('§§GUARD_CLN§§', 'colon'),
+]
+
+
+def load_steno_rules(force_reload: bool = False) -> List[Tuple[re.Pattern, str, str]]:
+    """
+    Loads spoken stenography commands from training/steno_english.json
+    and training/steno_marathi.json, compiles them into regex patterns,
+    and returns a cached list sorted descending by command complexity.
+    """
+    global _STENO_RULES_CACHE
+    if _STENO_RULES_CACHE is not None and not force_reload:
+        return _STENO_RULES_CACHE
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    en_path = os.path.join(base_dir, "training", "steno_english.json")
+    mr_path = os.path.join(base_dir, "training", "steno_marathi.json")
+
+    raw_rules: List[Tuple[str, str]] = []
+
+    # 1. Load English training JSON
+    if os.path.exists(en_path):
+        try:
+            with open(en_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for item in data:
+                    cmd = item.get("spoken_command", "").strip()
+                    sym = item.get("output_symbol", "")
+                    if cmd:
+                        raw_rules.append((cmd, sym))
+        except Exception as e:
+            print(f"Warning: Failed to load {en_path}: {e}")
+
+    # 2. Load Marathi training JSON
+    if os.path.exists(mr_path):
+        try:
+            with open(mr_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for item in data:
+                    cmd = item.get("spoken_command", "").strip()
+                    sym = item.get("output_symbol", "")
+                    if cmd:
+                        raw_rules.append((cmd, sym))
+        except Exception as e:
+            print(f"Warning: Failed to load {mr_path}: {e}")
+
+    # 3. Courtroom speech synonyms & variations
+    court_synonyms = [
+        ("next paragraph", "\n\n"),
+        ("next line", "\n"),
+        ("purna viram", "."),
+        ("alpa viram", ","),
+        ("prashna chinha", "?"),
+        ("udgar chinha", "!"),
+        ("फुल स्टॉप", "."),
+        ("कॉमा", ","),
+        ("पुढील परिच्छेद", "\n\n"),
+        ("पुढील ओळ", "\n"),
+        ("नवा परिच्छेद", "\n\n"),
+        ("नया पैराग्राफ", "\n\n"),
+        ("अगला पैराग्राफ", "\n\n"),
+        ("नई लाइन", "\n"),
+        ("अगली लाइन", "\n"),
+        ("उद्धरण चिन्ह", '"'),
+        ("विस्मयादिबोधक चिन्ह", "!"),
+    ]
+    for cmd, sym in court_synonyms:
+        raw_rules.append((cmd, sym))
+
+    # Deduplicate while preserving earliest rule
+    seen = set()
+    unique_rules: List[Tuple[str, str]] = []
+    for cmd, sym in raw_rules:
+        norm = cmd.lower()
+        if norm not in seen:
+            seen.add(norm)
+            unique_rules.append((cmd, sym))
+
+    # Sort descending by word count, then character length
+    # This guarantees multi-word commands (e.g., 'into the square bracket', 'चौकोनी कंस सुरू')
+    # match and convert before partial substrings (e.g., 'bracket', 'कंस सुरू')
+    unique_rules.sort(key=lambda x: (len(x[0].split()), len(x[0])), reverse=True)
+
+    compiled: List[Tuple[re.Pattern, str, str]] = []
+    for cmd, sym in unique_rules:
+        words = cmd.split()
+        escaped_words = [re.escape(w) for w in words]
+        body = r"\s+".join(escaped_words)
+        # Unicode-safe boundaries that work for Latin, Devanagari, and diacritics
+        pattern = re.compile(
+            r"(?<![A-Za-z0-9\u0900-\u097F])" + body + r"(?![A-Za-z0-9\u0900-\u097F])",
+            re.IGNORECASE,
+        )
+        compiled.append((pattern, sym, cmd))
+
+    _STENO_RULES_CACHE = compiled
+    return _STENO_RULES_CACHE
+
 
 def process_voice_commands(text: str, enabled: bool = True) -> str:
     """
-    Translates spoken dictation commands into courtroom punctuation and paragraph formatting.
-    
-    Commands supported:
-        - "full stop" / "period" -> .
-        - "comma" -> ,
-        - "colon" -> :
-        - "semicolon" -> ;
-        - "question mark" -> ?
-        - "exclamation mark" / "exclamation point" -> !
-        - "next paragraph" / "new paragraph" -> \\n\\n
-        - "new line" / "next line" -> \\n
-        - "open quote" -> "
-        - "close quote" -> "
-        - "quote" -> "
-    
-    Preserves normal speech when words appear in conversational phrases
-    (e.g., 'came to a full stop', 'period of limitation').
+    Translates spoken dictation commands into courtroom punctuation, brackets,
+    quotes, arithmetic, currency, and line/paragraph formatting based on
+    training/steno_english.json and training/steno_marathi.json.
+
+    Converts:
+        - Parentheses, brackets, curly braces:
+          "into bracket", "open bracket", "close parenthesis", "open square bracket",
+          "into the square bracket", "into the curly brace", "कंसात", "कंस सुरू",
+          "कंस पूर्ण", "चौकोनी कंस सुरू", "चौकोनी कंस बंद", "महिरपी कंस सुरू", etc.
+        - Punctuation & Quotes:
+          "full stop", "comma", "colon", "semicolon", "question mark", "exclamation mark",
+          "open quote", "close quote", "single quote", "पूर्णविराम", "स्वल्पविराम",
+          "प्रश्नचिन्ह", "उद्गारवाचक चिन्ह", "एकेरी अवतरण चिन्ह", "दुहेरी अवतरण चिन्ह", etc.
+        - Math & Currency:
+          "plus sign", "minus sign", "times sign", "divided by", "equals sign", "percent sign",
+          "रुपये चिन्ह", "रु", "अधिक", "वजा", "गुणिले", "भागिले", "बरोबर", etc.
+        - Line breaks & Paragraphs:
+          "new line", "next line", "new paragraph", "paragraph break",
+          "नवीन ओळ", "नवीन परिच्छेद", "पॅराग्राफ", etc.
+
+    Conversational phrases (e.g. 'came to a full stop', 'period of limitation',
+    'did not enter into agreement', 'income tax return') are carefully preserved.
     """
     if not enabled or not text:
         return text
 
     processed = text
 
-    # Paragraph and line breaks first (to avoid breaking on individual punctuation later)
-    # Support "next paragraph", "new paragraph", "paragraph break"
-    processed = re.sub(
-        r"(?i)\b(?:next\s+paragraph|new\s+paragraph|paragraph\s+break)\b",
-        "\n\n",
-        processed
-    )
-    
-    # "new line" / "next line"
-    processed = re.sub(
-        r"(?i)\b(?:next\s+line|new\s+line)\b",
-        "\n",
-        processed
-    )
+    # Step 1: Guard conversational phrases to prevent false positive conversions
+    for pat, repl in CONVERSATIONAL_GUARDS:
+        processed = pat.sub(repl, processed)
 
-    # Spoken full stop / period:
-    # Preserve conversational phrases like "a full stop" or "period of limitation"
-    def _full_stop_repl(m: re.Match) -> str:
-        prev = m.group(1) or ""
-        if prev.strip().lower() in ("a", "an", "the", "complete"):
-            return m.group(0)
-        return prev + "."
+    # Step 2: Apply steno command conversions from training JSONs
+    rules = load_steno_rules()
+    for pat, sym, _ in rules:
+        processed = pat.sub(lambda m, s=sym: s, processed)
 
-    processed = re.sub(
-        r"(?i)(\b[a-z]+\s+)?\bfull\s+stop\b",
-        _full_stop_repl,
-        processed
-    )
+    # Step 3: Restore conversational phrases
+    for placeholder, original in GUARD_RESTORATIONS:
+        processed = processed.replace(placeholder, original)
 
-    def _period_repl(m: re.Match) -> str:
-        prev = m.group(1) or ""
-        post = m.group(2) or ""
-        if prev.strip().lower() in ("a", "the", "this", "that", "grace", "cooling", "waiting") or post.strip().lower() in ("of", "for", "in", "from"):
-            return m.group(0)
-        return prev + "." + post
+    # Step 4: Formatting and spacing cleanups
+    # 4a. Remove spaces after opening brackets
+    processed = re.sub(r"([(\[{])\s+", r"\1", processed)
 
-    processed = re.sub(
-        r"(?i)(\b[a-z]+\s+)?\bperiod\b(\s+[a-z]+)?",
-        _period_repl,
-        processed
-    )
+    # 4b. Remove spaces before closing brackets
+    processed = re.sub(r"\s+([)\]}])", r"\1", processed)
 
-    # Question mark & Exclamation mark
-    processed = re.sub(r"(?i)\bquestion\s+mark\b", "?", processed)
-    processed = re.sub(r"(?i)\bexclamation\s+(?:mark|point)\b", "!", processed)
-
-    # Comma, Colon, Semicolon
-    processed = re.sub(r"(?i)\bcomma\b", ",", processed)
-    processed = re.sub(r"(?i)\bsemicolon\b", ";", processed)
-    processed = re.sub(r"(?i)\bcolon\b(?!\s+(?:cancer|surgery|cleanse))", ":", processed)
-
-    # Quotes
-    processed = re.sub(r"(?i)\b(?:open\s+quote|quote\s+open)\b", '"', processed)
-    processed = re.sub(r"(?i)\b(?:close\s+quote|quote\s+close)\b", '"', processed)
-    processed = re.sub(r"(?i)\bquote\s+unquote\b", '"', processed)
-
-    # Vernacular spoken paragraph & line breaks (Hindi & Marathi)
-    processed = re.sub(
-        r"(?:^|\s)(?:नवीन\s*परिच्छेद|पुढील\s*परिच्छेद|नवा\s*परिच्छेद|नया\s*पैराग्राफ|अगला\s*पैराग्राफ)(?=\s|$)",
-        "\n\n",
-        processed
-    )
-    processed = re.sub(
-        r"(?:^|\s)(?:नवीन\s*ओळ|पुढील\s*ओळ|नई\s*लाइन|अगली\s*लाइन)(?=\s|$)",
-        "\n",
-        processed
-    )
-
-    # Indian vernacular spoken punctuation (Hindi/Marathi)
-    processed = re.sub(r"(?:^|\s)(?:purna\s+viram|पूर्ण\s*विराम|पूर्णविराम|फुल\s*स्टॉप)(?=\s|[.,;:?!]|$)", ".", processed)
-    processed = re.sub(r"(?:^|\s)(?:alpa\s+viram|अल्प\s*विराम|अल्पविराम|स्वल्प\s*विराम|स्वल्पविराम|कॉमा)(?=\s|[.,;:?!]|$)", ",", processed)
-    processed = re.sub(r"(?:^|\s)(?:prashna\s+chinha|प्रश्न\s*चिन्ह|प्रश्नचिन्ह)(?=\s|[.,;:?!]|$)", "?", processed)
-    processed = re.sub(r"(?:^|\s)(?:उद्गार\s*चिन्ह|उद्गारवाचक\s*चिन्ह|विस्मयादिबोधक\s*चिन्ह)(?=\s|[.,;:?!]|$)", "!", processed)
-    processed = re.sub(r"(?:^|\s)(?:अपूर्ण\s*विराम|कोलन)(?=\s|[.,;:?!]|$)", ":", processed)
-    processed = re.sub(r"(?:^|\s)(?:अर्ध\s*विराम|अर्धविराम)(?=\s|[.,;:?!]|$)", ";", processed)
-    processed = re.sub(r"(?:^|\s)(?:उद्धरण\s*चिन्ह|अवतरण\s*चिन्ह)(?=\s|$)", ' "', processed)
-
-    # Formatting and spacing cleanup:
-    # 1. Remove spaces before punctuation marks
+    # 4c. Remove spaces before punctuation marks
     processed = re.sub(r"\s+([.,;:?!])", r"\1", processed)
 
-    # 2. Ensure a single space follows punctuation when followed by letters/digits (Latin & Devanagari)
+    # 4d. Ensure single space follows punctuation / closing brackets if followed by word/number
     processed = re.sub(r"([.,;:?!])([A-Za-z0-9\u0900-\u097F])", r"\1 \2", processed)
+    processed = re.sub(r"([)\]}])([A-Za-z0-9\u0900-\u097F])", r"\1 \2", processed)
 
-    # 3. Clean up spaces around newlines
+    # 4e. Clean up spaces inside quotes
+    processed = re.sub(r'"\s+([^"\n]+?)\s+"', r'"\1"', processed)
+    processed = re.sub(r"'\s+([^'\n]+?)\s+'", r"'\1'", processed)
+
+    # 4f. Clean up whitespace around newlines
     processed = re.sub(r"[ \t]*\n[ \t]*", "\n", processed)
     processed = re.sub(r"\n{3,}", "\n\n", processed)
 
-    # 4. Capitalize first letter of each sentence and after paragraph breaks (for Latin text)
+    # 4g. Capitalize first letter of Latin sentences at start or after punctuation / newline
     def capitalize_match(match: re.Match) -> str:
         prefix = match.group(1)
         char = match.group(2)
         return prefix + char.upper()
 
-    # Beginning of text
     processed = re.sub(r"^(\s*)([a-z])", capitalize_match, processed)
-    # After [.?!] followed by whitespace
     processed = re.sub(r"([.?!]\s+)([a-z])", capitalize_match, processed)
-    # After newline
     processed = re.sub(r"(\n+)([a-z])", capitalize_match, processed)
 
     return processed.strip()
@@ -212,8 +289,8 @@ def transcribe_audio_file(
         "response_format": "text",
     }
     
-    # Pass language only if specified (Auto detect omits language parameter)
-    if language_code and language_code.lower() not in ("auto", "auto detect", "none"):
+    # Pass language only if a specific single language is selected (Mixed / Auto detect omits language parameter to prevent forced translation)
+    if language_code and language_code.lower() not in ("auto", "auto detect", "none", "mixed", "code-switching"):
         params["language"] = language_code.lower()
 
     raw_text = ""
@@ -305,27 +382,28 @@ def generate_draft_proceedings(transcript: str, api_key: Optional[str] = None) -
 
     client = get_openai_client(api_key)
     
-    prompt = f"""You are a courtroom legal secretary assisting a judicial bench.
-Create a structured 'COURT PROCEEDINGS — DRAFT' based ONLY on the following official spoken transcript.
+    prompt = f"""You are an official Court Stenographer typing the Hon'ble Judge's dictated court order and proceedings.
+Create a structured 'JUDGE'S DICTATION / COURT PROCEEDINGS — DRAFT' based ONLY on the following official spoken transcript.
 
 CRITICAL INSTRUCTIONS:
 1. Do NOT invent or assume any facts, dates, names, or statutes not present in the transcript.
 2. If a section has no details in the transcript, write 'Not specified in proceedings'.
-3. Label clearly: 'AI-generated draft — requires review by the presiding authority/legal professional.'
-4. Adhere strictly to this exact outline:
+3. Maintain language fidelity: If the Judge's transcript is in English, write in English. If in Marathi, write in Marathi. If mixed English-Marathi code-switching, preserve the mixed language verbatim. NEVER translate.
+4. Label clearly: 'Official Stenographer Draft — requires signature/review by the Hon'ble Presiding Judge.'
+5. Adhere strictly to this exact outline:
 
-COURT PROCEEDINGS — DRAFT
--------------------------
-[Disclaimer: AI-generated draft — requires review by the presiding authority/legal professional.]
+JUDGE'S DICTATION & COURT PROCEEDINGS — DRAFT
+---------------------------------------------
+[Official Stenographer Draft — requires review by the Hon'ble Presiding Judge]
 
-1. Case Summary
-2. Appearances (Learned Counsel / Parties Present)
-3. Submissions (Key arguments made by parties)
-4. Evidence / Statements
-5. Issues Discussed
-6. Orders / Directions Mentioned
-7. Important Dates (Next hearing date, filing deadlines)
-8. Transcript Reference (Verbatim key excerpt)
+1. Order / Case Summary
+2. Coram & Appearances (Hon'ble Judge, Counsel for Parties)
+3. Submissions Recorded
+4. Evidence / Exhibits / Affidavits Cited
+5. Findings & Observations of the Bench
+6. Operative Order / Directions Issued
+7. Next Hearing Date & Compliance Schedule
+8. Verbatim Key Dictation Excerpt
 
 TRANSCRIPT:
 {transcript}
@@ -336,7 +414,7 @@ TRANSCRIPT:
             completion = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a precise judicial clerk adhering strictly to the court record."},
+                    {"role": "system", "content": "You are a precise Judicial Stenographer adhering strictly to the Judge's spoken record. You preserve original languages verbatim without translating."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.2,

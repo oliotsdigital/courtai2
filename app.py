@@ -261,10 +261,10 @@ with st.sidebar:
         """
         <div style="padding-bottom: 12px; border-bottom: 1px solid #E2E8F0; margin-bottom: 16px;">
             <h2 style="color: #1B365D; font-size: 1.25rem; margin: 0; font-weight: 700;">
-                ⚖️ CourtScribe AI
+                ⚖️ CourtScribe Steno AI
             </h2>
             <div style="color: #64748B; font-size: 0.8rem; margin-top: 2px;">
-                Courtroom Transcription Console
+                Judicial Stenographer Workstation
             </div>
         </div>
         """,
@@ -291,16 +291,21 @@ with st.sidebar:
 
     # Language Selection
     language_choice = st.selectbox(
-        "Spoken Language",
-        options=["Auto Detect", "English", "Hindi", "Marathi"],
+        "Steno Language Mode",
+        options=[
+            "Mixed (English + Marathi / Hindi)",
+            "English (India)",
+            "Marathi (मराठी)",
+            "Hindi (हिन्दी)",
+        ],
         index=0,
-        help="Select language or Auto Detect for automatic detection and multilingual code-switching.",
+        help="Select language mode. Mixed mode types English in English and Marathi/Hindi in Marathi/Hindi verbatim without any translation.",
     )
     lang_code_map = {
-        "Auto Detect": None,
-        "English": "en",
-        "Hindi": "hi",
-        "Marathi": "mr",
+        "Mixed (English + Marathi / Hindi)": None,  # None allows OpenAI to transcribe code-switched text verbatim
+        "English (India)": "en",
+        "Marathi (मराठी)": "mr",
+        "Hindi (हिन्दी)": "hi",
     }
     selected_lang_code = lang_code_map[language_choice]
 
@@ -395,18 +400,39 @@ with st.sidebar:
         st.info("Record or load transcript to enable document export.")
 
     # Voice Commands Cheat Sheet
-    with st.expander("🎙️ Spoken Commands Reference", expanded=False):
+    with st.expander("🎙️ Spoken Steno Commands Reference", expanded=False):
         st.markdown(
             """
+            **English Steno Commands:**
+            - **`"into bracket"` / `"close bracket"`** → `( )`
+            - **`"open square bracket"` / `"close square bracket"`** → `[ ]`
+            - **`"open curly brace"` / `"close curly brace"`** → `{ }`
+            - **`"open quote"` / `"close quote"`** → `"`
+            - **`"open single quote"` / `"close single quote"`** → `'`
             - **`"full stop"` / `"period"`** → `.`
             - **`"comma"`** → `,`
-            - **`"colon"`** → `:`
-            - **`"semicolon"`** → `;`
-            - **`"question mark"`** → `?`
-            - **`"exclamation mark"`** → `!`
-            - **`"next paragraph"`** → Paragraph break
-            - **`"new line"`** → New line
-            - **`"open quote"` / `"close quote"`** → `"`
+            - **`"colon"`** → `:` &nbsp;|&nbsp; **`"semicolon"`** → `;`
+            - **`"question mark"`** → `?` &nbsp;|&nbsp; **`"exclamation mark"`** → `!`
+            - **`"plus sign"`** → `+` &nbsp;|&nbsp; **`"minus sign"`** → `-`
+            - **`"multiplication sign"`** → `×` &nbsp;|&nbsp; **`"divided by"`** → `÷`
+            - **`"equals sign"`** → `=` &nbsp;|&nbsp; **`"percent sign"`** → `%`
+            - **`"new line"`** → New line (`\\n`)
+            - **`"new paragraph"`** → Paragraph break (`\\n\\n`)
+
+            **Marathi Steno Commands (मराठी):**
+            - **`"कंसात"` / `"कंस सुरू"` / `"कंस पूर्ण"`** → `( )`
+            - **`"चौकोनी कंस सुरू"` / `"चौकोनी कंस पूर्ण"`** → `[ ]`
+            - **`"महिरपी कंस सुरू"` / `"महिरपी कंस पूर्ण"`** → `{ }`
+            - **`"दुहेरी अवतरण चिन्ह सुरू"` / `"बंद"`** → `"`
+            - **`"एकेरी अवतरण चिन्ह सुरू"` / `"बंद"`** → `'`
+            - **`"पूर्णविराम"`** → `.` &nbsp;|&nbsp; **`"स्वल्पविराम"`** → `,`
+            - **`"प्रश्नचिन्ह"`** → `?` &nbsp;|&nbsp; **`"उद्गारवाचक चिन्ह"`** → `!`
+            - **`"अर्धविराम"`** → `;` &nbsp;|&nbsp; **`"अपूर्णविराम"`** → `:`
+            - **`"रुपये चिन्ह"` / `"रु"`** → `₹`
+            - **`"अधिक"`** → `+` &nbsp;|&nbsp; **`"वजा"`** → `-`
+            - **`"गुणिले"`** → `×` &nbsp;|&nbsp; **`"भागिले"`** → `÷` &nbsp;|&nbsp; **`"बरोबर"`** → `=`
+            - **`"नवीन ओळ"`** → नवीन ओळ (`\\n`)
+            - **`"नवीन परिच्छेद"` / `"पॅराग्राफ"`** → परिच्छेद ब्रेक (`\\n\\n`)
             """
         )
 
@@ -428,19 +454,19 @@ st.markdown(
     <div class="court-header">
         <div class="court-title-group">
             <h1>
-                CourtScribe AI
-                <span class="demo-badge">DEMO</span>
+                CourtScribe Steno AI
+                <span class="demo-badge">JUDICIAL STENOGRAPHER</span>
             </h1>
-            <div class="court-subtitle">Real-time Courtroom Speech-to-Text & Judicial Transcription Workstation</div>
+            <div class="court-subtitle">Verbatim Speech-to-Text Workstation for Judge's Oral Dictation & Courtroom Orders</div>
         </div>
         <div class="status-bar">
-            <span class="status-pill"><span class="dot-ready">●</span> Microphone Ready</span>
-            <span class="status-pill"><span class="dot-lang">●</span> Language: {language_choice}</span>
+            <span class="status-pill"><span class="dot-ready">●</span> Steno Mic Ready</span>
+            <span class="status-pill"><span class="dot-lang">●</span> Mode: {language_choice}</span>
             <span class="status-pill"><span class="{ai_status_dot}">●</span> {ai_status_text}</span>
         </div>
     </div>
     <div class="court-disclaimer">
-        ⚖️ Demo only — transcription should be reviewed by a human before being used as an official court record.
+        ⚖️ Judicial Stenographer Workstation: Transcribes Judge's oral statements verbatim. English is typed in English and Marathi in Marathi without translation.
     </div>
     """,
     unsafe_allow_html=True,
@@ -464,24 +490,24 @@ col_main, col_tools = st.columns([7, 3], gap="large")
 with col_main:
     # 1. Courtroom Dictation Modes
     tab_live, tab_file = st.tabs([
-        "⚡ Real-Time Streaming Dictation (Words Printed As You Talk)",
-        "🎙️ Audio File Upload (OpenAI Model)"
+        "⚡ Real-Time Stenographer Dictation (Judge's Statement As Spoken)",
+        "🎙️ Audio Recording Upload (OpenAI Steno Transcriber)"
     ])
 
     with tab_live:
-        st.caption("Press **Start Live Dictation** below and begin speaking. Spoken words will print on screen in real-time as you talk, with live voice commands and legal terms.")
+        st.caption("Press **Start Steno Dictation** below as the Judge speaks. English words are typed in English, Marathi in Marathi, and mixed speech is typed mixed verbatim without translation.")
         live_html_path = os.path.join(_recorder_dir, "index.html")
         with open(live_html_path, "r", encoding="utf-8") as f:
             live_html = f.read()
 
         # Inject selected language from sidebar into live dictation engine
         lang_bcp47_map = {
-            "English": "en-IN",
-            "Hindi": "hi-IN",
-            "Marathi": "mr-IN",
-            "Auto Detect": "en-IN",
+            "Mixed (English + Marathi / Hindi)": "mr-IN",
+            "English (India)": "en-IN",
+            "Marathi (मराठी)": "mr-IN",
+            "Hindi (हिन्दी)": "hi-IN",
         }
-        active_bcp47 = lang_bcp47_map.get(language_choice, "en-IN")
+        active_bcp47 = lang_bcp47_map.get(language_choice, "mr-IN")
         live_html = live_html.replace("__DEFAULT_LANG__", active_bcp47)
 
         components.html(live_html, height=360, scrolling=True)
@@ -605,9 +631,30 @@ with col_main:
     # Action buttons under editor
     col_act1, col_act2, col_act3 = st.columns([3, 4, 3])
     with col_act1:
-        if st.button("📋 Load Demo Transcript", help=f"Loads a realistic {language_choice} courtroom proceedings sample"):
-            if language_choice == "Hindi":
+        if st.button("📋 Load Judge's Dictation Sample", help=f"Loads a realistic {language_choice} Judge's dictation sample"):
+            if "Mixed" in language_choice:
                 demo_text = (
+                    "Order dictated in open court.\n\n"
+                    "This is an application for grant of interim bail under Section 439 of the CrPC. "
+                    "अर्जदार यांच्या विद्वान वकिलांचा युक्तिवाद ऐकून घेतला. "
+                    "In view of the medical grounds submitted in Exhibit 4, आरोपीला २५,००० रुपयांच्या जातमुचलक्यावर अंतरिम जामीन मंजूर करण्यात येत आहे.\n\n"
+                    "The applicant shall surrender his passport before the Registrar and shall not tamper with the prosecution witnesses. "
+                    "प्रतिवादी यांनी लेखी जबाब दाखल करण्यासाठी दोन आठवड्यांची मुदत मागितली आहे.\n\n"
+                    "The matter is adjourned to 15th October for further hearing. "
+                    "All concerned to act on the authenticated copy of this order."
+                )
+            elif "Marathi" in language_choice:
+                demo_text = (
+                    "खुली न्यायालयात दिलेला आदेश.\n\n"
+                    "सदर प्रकरण सीपीसी च्या कलम 144 अंतर्गत दाखल केलेल्या अर्जाशी संबंधित आहे. "
+                    "नामदार न्यायालयाने दोन्ही बाजूंचे म्हणणे ऐकून घेतले. "
+                    "अर्जदाराच्या विद्वान वकिलांनी असा युक्तिवाद केला की तातडीचा अंतरिम दिलासा देणे न्याय्य ठरेल.\n\n"
+                    "प्रतिवादींनी लेखी जबाब दाखल करण्यासाठी दोन आठवड्यांची मुदत मागितली आहे. "
+                    "पुढील युक्तिवादासाठी सुनावणी पुढील तारखेपर्यंत तहकूब करण्यात येत आहे."
+                )
+            elif "Hindi" in language_choice:
+                demo_text = (
+                    "खुली अदालत में आदेश सुनाया गया।\n\n"
                     "आवेदक उपस्थित हैं और विद्वान अधिवक्ता द्वारा उनका प्रतिनिधित्व किया जा रहा है। प्रतिवादी भी उपस्थित हैं। "
                     "यह मामला सीपीसी की धारा 144 के तहत दायर आवेदन से संबंधित है।\n\n"
                     "माननीय न्यायालय ने दोनों पक्षों की दलीलें सुनीं। आवेदक के विद्वान अधिवक्ता का निवेदन है कि "
@@ -615,17 +662,9 @@ with col_main:
                     "प्रतिवादी लिखित बयान दाखिल करने के लिए दो सप्ताह का समय मांगते हैं। "
                     "मामले को आगे की बहस के लिए अगली सुनवाई की तारीख तक स्थगित किया जाता है।"
                 )
-            elif language_choice == "Marathi":
-                demo_text = (
-                    "अर्जदार उपस्थित असून विद्वान वकीलांमार्फत त्यांचे प्रतिनिधित्व केले जात आहे. प्रतिवादी देखील उपस्थित आहेत. "
-                    "सदर प्रकरण सीपीसी च्या कलम 144 अंतर्गत दाखल केलेल्या अर्जाशी संबंधित आहे.\n\n"
-                    "नामदार न्यायालयाने दोन्ही बाजूंचे म्हणणे ऐकून घेतले. अर्जदाराच्या विद्वान वकिलांनी असा युक्तिवाद केला की "
-                    "तातडीचा अंतरिम दिलासा देणे न्याय्य ठरेल.\n\n"
-                    "प्रतिवादींनी लेखी जबाब दाखल करण्यासाठी दोन आठवड्यांची मुदत मागितली आहे. "
-                    "पुढील युक्तिवादासाठी सुनावणी पुढील तारखेपर्यंत तहकूब करण्यात येत आहे."
-                )
             else:
                 demo_text = (
+                    "Order dictated in open court.\n\n"
                     "The applicant is present and represented by learned counsel. The respondent is also present. "
                     "The matter concerns the application filed under Section 144 of the CPC.\n\n"
                     "The Court has heard the submissions of both parties. The learned counsel for the applicant "
@@ -637,23 +676,23 @@ with col_main:
             st.session_state.demo_data_loaded = True
             st.session_state.last_transcription_status = {
                 "type": "success",
-                "msg": f"Realistic {language_choice} demo transcript loaded into editor.",
+                "msg": f"Realistic {language_choice} Judge's dictation loaded into editor.",
             }
             st.rerun()
 
     with col_act2:
         if st.session_state.transcript.strip():
-            # Quick normalize button to re-apply legal formatting after manual edits
-            if st.button("✨ Apply Legal Normalization", help="Re-runs legal terminology and citation formatters on the current text"):
+            if st.button("✨ Apply Steno Normalization", help="Converts spoken steno commands into symbols and standardizes legal citations while preserving original languages verbatim"):
+                text_with_cmds = process_voice_commands(st.session_state.transcript, enabled=True)
                 st.session_state.transcript = normalize_legal_terms(
-                    st.session_state.transcript,
+                    text_with_cmds,
                     language_code=selected_lang_code
                 )
                 st.rerun()
 
     with col_act3:
-        if st.button("📝 Create Draft Notes", help="Structures the transcript into judicial proceedings draft notes"):
-            with st.spinner("Structuring proceedings draft..."):
+        if st.button("📝 Generate Judge's Order Draft", help="Structures the Judge's dictated transcript into an official court order draft"):
+            with st.spinner("Structuring Judge's order draft..."):
                 draft = generate_draft_proceedings(st.session_state.transcript)
                 st.session_state.draft_notes = draft
                 st.rerun()

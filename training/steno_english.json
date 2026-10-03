@@ -1,0 +1,202 @@
+[
+  {"spoken_command": "into bracket", "output_symbol": "("},
+  {"spoken_command": "open bracket", "output_symbol": "("},
+  {"spoken_command": "left bracket", "output_symbol": "("},
+  {"spoken_command": "bracket close", "output_symbol": ")"},
+  {"spoken_command": "close bracket", "output_symbol": ")"},
+  {"spoken_command": "right bracket", "output_symbol": ")"},
+  {"spoken_command": "open parenthesis", "output_symbol": "("},
+  {"spoken_command": "close parenthesis", "output_symbol": ")"},
+  {"spoken_command": "open curly brace", "output_symbol": "{"},
+  {"spoken_command": "close curly brace", "output_symbol": "}"},
+  {"spoken_command": "open square bracket", "output_symbol": "["},
+  {"spoken_command": "close square bracket", "output_symbol": "]"},
+  
+  {"spoken_command": "period", "output_symbol": "."},
+  {"spoken_command": "full stop", "output_symbol": "."},
+  {"spoken_command": "dot", "output_symbol": "."},
+  {"spoken_command": "comma", "output_symbol": ","},
+  {"spoken_command": "question mark", "output_symbol": "?"},
+  {"spoken_command": "exclamation mark", "output_symbol": "!"},
+  {"spoken_command": "exclamation point", "output_symbol": "!"},
+  {"spoken_command": "colon", "output_symbol": ":"},
+  {"spoken_command": "semicolon", "output_symbol": ";"},
+  
+  {"spoken_command": "open quote", "output_symbol": "\""},
+  {"spoken_command": "open double quote", "output_symbol": "\""},
+  {"spoken_command": "close quote", "output_symbol": "\""},
+  {"spoken_command": "close double quote", "output_symbol": "\""},
+  {"spoken_command": "open single quote", "output_symbol": "'"},
+  {"spoken_command": "close single quote", "output_symbol": "'"},
+  {"spoken_command": "apostrophe", "output_symbol": "'"},
+  
+  {"spoken_command": "hyphen", "output_symbol": "-"},
+  {"spoken_command": "dash", "output_symbol": "-"},
+  {"spoken_command": "em dash", "output_symbol": "—"},
+  {"spoken_command": "underscore", "output_symbol": "_"},
+  
+  {"spoken_command": "slash", "output_symbol": "/"},
+  {"spoken_command": "forward slash", "output_symbol": "/"},
+  {"spoken_command": "backslash", "output_symbol": "\\"},
+  {"spoken_command": "pipe", "output_symbol": "|"},
+  {"spoken_command": "vertical bar", "output_symbol": "|"},
+  
+  {"spoken_command": "ampersand", "output_symbol": "&"},
+  {"spoken_command": "and sign", "output_symbol": "&"},
+  {"spoken_command": "asterisk", "output_symbol": "*"},
+  {"spoken_command": "star sign", "output_symbol": "*"},
+  {"spoken_command": "at sign", "output_symbol": "@"},
+  {"spoken_command": "hashtag", "output_symbol": "#"},
+  {"spoken_command": "pound sign", "output_symbol": "#"},
+  {"spoken_command": "number sign", "output_symbol": "#"},
+  {"spoken_command": "percent sign", "output_symbol": "%"},
+  
+  {"spoken_command": "dollar sign", "output_symbol": "$"},
+  {"spoken_command": "euro sign", "output_symbol": "€"},
+  {"spoken_command": "pound sterling", "output_symbol": "£"},
+  {"spoken_command": "cent sign", "output_symbol": "¢"},
+  
+  {"spoken_command": "equals sign", "output_symbol": "="},
+  {"spoken_command": "plus sign", "output_symbol": "+"},
+  {"spoken_command": "minus sign", "output_symbol": "-"},
+  {"spoken_command": "less than sign", "output_symbol": "<"},
+  {"spoken_command": "open angle bracket", "output_symbol": "<"},
+  {"spoken_command": "greater than sign", "output_symbol": ">"},
+  {"spoken_command": "close angle bracket", "output_symbol": ">"},
+  {"spoken_command": "degree sign", "output_symbol": "°"},
+  {"spoken_command": "tilde", "output_symbol": "~"},
+  
+  {"spoken_command": "new line", "output_symbol": "\n"},
+  {"spoken_command": "next line", "output_symbol": "\n"},
+  {"spoken_command": "new paragraph", "output_symbol": "\n\n"},
+  
+  {"spoken_command": "open paren", "output_symbol": "("},
+  {"spoken_command": "left paren", "output_symbol": "("},
+  {"spoken_command": "start parenthesis", "output_symbol": "("},
+  {"spoken_command": "start round bracket", "output_symbol": "("},
+  {"spoken_command": "left round bracket", "output_symbol": "("},
+  {"spoken_command": "close paren", "output_symbol": ")"},
+  {"spoken_command": "right paren", "output_symbol": ")"},
+  {"spoken_command": "end parenthesis", "output_symbol": ")"},
+  {"spoken_command": "end round bracket", "output_symbol": ")"},
+  {"spoken_command": "right round bracket", "output_symbol": ")"},
+  
+  {"spoken_command": "start bracket", "output_symbol": "["},
+  {"spoken_command": "left square bracket", "output_symbol": "["},
+  {"spoken_command": "open box bracket", "output_symbol": "["},
+  {"spoken_command": "end bracket", "output_symbol": "]"},
+  {"spoken_command": "right square bracket", "output_symbol": "]"},
+  {"spoken_command": "close box bracket", "output_symbol": "]"},
+  
+  {"spoken_command": "left curly brace", "output_symbol": "{"},
+  {"spoken_command": "left brace", "output_symbol": "{"},
+  {"spoken_command": "start curly brace", "output_symbol": "{"},
+  {"spoken_command": "left squiggly bracket", "output_symbol": "{"},
+  {"spoken_command": "right curly brace", "output_symbol": "}"},
+  {"spoken_command": "right brace", "output_symbol": "}"},
+  {"spoken_command": "end curly brace", "output_symbol": "}"},
+  {"spoken_command": "right squiggly bracket", "output_symbol": "}"},
+  
+  {"spoken_command": "point", "output_symbol": "."},
+  {"spoken_command": "decimal", "output_symbol": "."},
+  {"spoken_command": "decimal point", "output_symbol": "."},
+  
+  {"spoken_command": "bang", "output_symbol": "!"},
+  {"spoken_command": "shout mark", "output_symbol": "!"},
+  
+  {"spoken_command": "query", "output_symbol": "?"},
+  {"spoken_command": "question", "output_symbol": "?"},
+  {"spoken_command": "mark of interrogation", "output_symbol": "?"},
+  
+  {"spoken_command": "semi", "output_symbol": ";"},
+  
+  {"spoken_command": "start quote", "output_symbol": "\""},
+  {"spoken_command": "end quote", "output_symbol": "\""},
+  {"spoken_command": "open inverted commas", "output_symbol": "\""},
+  {"spoken_command": "close inverted commas", "output_symbol": "\""},
+  
+  {"spoken_command": "start single quote", "output_symbol": "'"},
+  {"spoken_command": "end single quote", "output_symbol": "'"},
+  {"spoken_command": "tick", "output_symbol": "'"},
+  
+  {"spoken_command": "minus", "output_symbol": "-"},
+  {"spoken_command": "subtract", "output_symbol": "-"},
+  {"spoken_command": "hyphenate", "output_symbol": "-"},
+  
+  {"spoken_command": "times sign", "output_symbol": "×"},
+  {"spoken_command": "multiply by", "output_symbol": "×"},
+  {"spoken_command": "multiplication sign", "output_symbol": "×"},
+  
+  {"spoken_command": "divided by", "output_symbol": "÷"},
+  {"spoken_command": "division sign", "output_symbol": "÷"},
+  {"spoken_command": "obelus", "output_symbol": "÷"},
+  
+  {"spoken_command": "equal to", "output_symbol": "="},
+  {"spoken_command": "equals", "output_symbol": "="},
+  
+  {"spoken_command": "caret", "output_symbol": "^"},
+  {"spoken_command": "hat", "output_symbol": "^"},
+  {"spoken_command": "power symbol", "output_symbol": "^"},
+  
+  {"spoken_command": "backtick", "output_symbol": "`"},
+  {"spoken_command": "grave accent", "output_symbol": "`"},
+  
+  {"spoken_command": "squiggly dash", "output_symbol": "~"},
+  {"spoken_command": "twiddle", "output_symbol": "~"},
+  
+  {"spoken_command": "hash mark", "output_symbol": "#"},
+  {"spoken_command": "pound", "output_symbol": "#"},
+  {"spoken_command": "sharp", "output_symbol": "#"},
+  {"spoken_command": "sharp sign", "output_symbol": "#"},
+  
+  {"spoken_command": "and symbol", "output_symbol": "&"},
+  
+  {"spoken_command": "star", "output_symbol": "*"},
+  
+  {"spoken_command": "percentage", "output_symbol": "%"},
+  {"spoken_command": "percent sign", "output_symbol": "%"},
+  {"spoken_command": "percentage sign", "output_symbol": "%"},
+  
+  {"spoken_command": "space", "output_symbol": " "},
+  {"spoken_command": "spacebar", "output_symbol": " "},
+  {"spoken_command": "tab", "output_symbol": "\t"},
+  {"spoken_command": "tab key", "output_symbol": "\t"},
+  {"spoken_command": "indent", "output_symbol": "\t"},
+  
+  {"spoken_command": "carriage return", "output_symbol": "\n"},
+  {"spoken_command": "enter", "output_symbol": "\n"},
+  {"spoken_command": "line break", "output_symbol": "\n"},
+  {"spoken_command": "return", "output_symbol": "\n"},
+  {"spoken_command": "paragraph break", "output_symbol": "\n\n"},
+  
+  {"spoken_command": "into the bracket", "output_symbol": "("},
+  {"spoken_command": "in the bracket", "output_symbol": "("},
+  {"spoken_command": "in brackets", "output_symbol": "("},
+  {"spoken_command": "inside bracket", "output_symbol": "("},
+  {"spoken_command": "inside the bracket", "output_symbol": "("},
+  {"spoken_command": "open the bracket", "output_symbol": "("},
+  {"spoken_command": "start the bracket", "output_symbol": "("},
+  {"spoken_command": "put in bracket", "output_symbol": "("},
+  {"spoken_command": "put into bracket", "output_symbol": "("},
+  {"spoken_command": "put into the bracket", "output_symbol": "("},
+  
+  {"spoken_command": "close the bracket", "output_symbol": ")"},
+  {"spoken_command": "out of bracket", "output_symbol": ")"},
+  {"spoken_command": "out of the bracket", "output_symbol": ")"},
+  {"spoken_command": "end the bracket", "output_symbol": ")"},
+  {"spoken_command": "close off bracket", "output_symbol": ")"},
+  
+  {"spoken_command": "into the square bracket", "output_symbol": "["},
+  {"spoken_command": "in the square bracket", "output_symbol": "["},
+  {"spoken_command": "inside the square bracket", "output_symbol": "["},
+  {"spoken_command": "close the square bracket", "output_symbol": "]"},
+  {"spoken_command": "out of the square bracket", "output_symbol": "]"},
+
+  {"spoken_command": "into the curly brace", "output_symbol": "{"},
+  {"spoken_command": "in the curly brace", "output_symbol": "{"},
+  {"spoken_command": "inside the curly brace", "output_symbol": "{"},
+  {"spoken_command": "close the curly brace", "output_symbol": "}"},
+  {"spoken_command": "out of the curly brace", "output_symbol": "}"}
+
+
+]
