@@ -3,7 +3,7 @@
 .env*.local
 *.env
 !.env.example
-
+training/
 # Python bytecode & cache
 __pycache__/
 *.py[cod]

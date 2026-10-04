@@ -551,8 +551,8 @@
 
       // 1. Conversational phrase guards to prevent false-positive command conversion
       t = t.replace(/(\b(?:a|an|the|complete)\s+)full\s+stop\b/gi, "$1§§GUARD_FS§§");
-      t = t.replace(/(\b(?:a|an|the|this|that|grace|cooling|waiting)\s+)period\b/gi, "$1§§GUARD_PR§§");
-      t = t.replace(/\bperiod(\s+(?:of|for|in|from)\b)/gi, "§§GUARD_PR§§$1");
+      t = t.replace(/(\b(?:a|an|the|this|that|to|such|grace|cooling|waiting|limitation|probation|intervening)\s+)period\b/gi, "$1§§GUARD_PR§§");
+      t = t.replace(/\bperiod(\s+(?:of|for|in|from|to|already|undergone|elapsed|specified)\b)/gi, "§§GUARD_PR§§$1");
       t = t.replace(/(\b(?:to|shall|did|not|will|cannot|may|might)\s+)enter\b/gi, "$1§§GUARD_ENT§§");
       t = t.replace(/\benter(\s+(?:into|upon|appearance|plea)\b)/gi, "§§GUARD_ENT§§$1");
       t = t.replace(/(\b(?:tax|income|in|to|shall|file|filing)\s+)return\b/gi, "$1§§GUARD_RET§§");
@@ -574,12 +574,51 @@
       t = t.replace(/§§GUARD_PT§§/g, "point");
       t = t.replace(/§§GUARD_CLN§§/g, "colon");
 
-      // 4. Section numbers: Standardize numerals while PRESERVING the exact language word (कलम, धारा, or Section)
+      // 4. Witness & Accused Formatting (from training data english_data_1.txt & english_data_2.txt)
+      t = t.replace(/\b(?:P\.?\s*W\.?|Prosecution\s+Witness)\s*[- ]?(\d+)\b/gi, "PW-$1");
+      t = t.replace(/\b(?:D\.?\s*W\.?|Defence\s+Witness)\s*[- ]?(\d+)\b/gi, "DW-$1");
+      t = t.replace(/\b(?:C\.?\s*W\.?|Court\s+Witness)\s*[- ]?(\d+)\b/gi, "CW-$1");
+      t = t.replace(/\bA\s*[-]?\s*(\d+)\s+to\s+A\s*[-]?\s*(\d+)\b/gi, "A$1 to A$2");
+      t = t.replace(/\b(?:accused|accused\s+no\.?)\s*(\d+)\b/gi, "Accused No. $1");
+      t = t.replace(/\b(?:appellant|appellant\s+no\.?)\s*(\d+)\b/gi, "Appellant No. $1");
+      t = t.replace(/\b(?:son\s+of|s\s*\/\s*o\.?)\s+/gi, "S/o. ");
+      t = t.replace(/\b(?:daughter\s+of|d\s*\/\s*o\.?)\s+/gi, "D/o. ");
+      t = t.replace(/\b(?:wife\s+of|w\s*\/\s*o\.?)\s+/gi, "W/o. ");
+      t = t.replace(/\b(?:a\.?\s*k\.?\s*a\.?|also\s+known\s+as)\b/gi, "alias");
+
+      // 5. Exhibits & Material Objects (Ex.P1 to Ex.P21, Ex.D1, MO-1 to MO-17)
+      t = t.replace(/\b(?:Ex(?:hibit|\.)?\s*P\s*[- ]?(\d+))\b/gi, "Ex.P$1");
+      t = t.replace(/\b(?:Ex(?:hibit|\.)?\s*D\s*[- ]?(\d+))\b/gi, "Ex.D$1");
+      t = t.replace(/\b(?:M\.?O\.?|Material\s+Object)\s*[- ]?(\d+)\b/gi, "MO-$1");
+      t = t.replace(/\b(?:M\.?O\.?s|Material\s+Objects)\s*(\d+)\s*(?:to|-)\s*(\d+)\b/gi, "MOs $1 to $2");
+
+      // 6. Forensics, Medical Evidence & Procedural Stages
+      t = t.replace(/\bpost\s*mortem\b/gi, "post-mortem");
+      t = t.replace(/\bante\s*mortem\b/gi, "ante-mortem");
+      t = t.replace(/\bcross\s*examination\b/gi, "cross-examination");
+      t = t.replace(/\bexamination\s+in\s+chief\b/gi, "Examination-in-Chief");
+      t = t.replace(/\bre\s*examination\b/gi, "re-examination");
+      t = t.replace(/\bcharge\s*sheet\b/gi, "charge-sheet");
+      t = t.replace(/\bwound\s+certificate\b/gi, "wound certificate");
+      t = t.replace(/\binquest\s+mahazar\b/gi, "inquest mahazar");
+      t = t.replace(/\bseizure\s+mahazar\b/gi, "seizure mahazar");
+      t = t.replace(/\bF\.?S\.?L\.?\b/gi, "FSL");
+      t = t.replace(/\bJ\.?M\.?F\.?C\.?\b/gi, "JMFC");
+      t = t.replace(/\bC\.?J\.?M\.?\b/gi, "CJM");
+      t = t.replace(/\b(?:P\.?M\.?|PM)\s*report\b/gi, "post-mortem report");
+      t = t.replace(/\bM\.?L\.?C\.?\b/gi, "MLC");
+
+      // 7. Section numbers: Standardize numerals while PRESERVING the exact language word (कलम, धारा, or Section)
       t = t.replace(/\b(?:section\s+one\s+forty[- ]?four)\b/gi, "Section 144");
       t = t.replace(/\b(?:section\s+four\s+twenty)\b/gi, "Section 420");
       t = t.replace(/\b(?:section\s+(?:three\s+zero\s+two|three\s+hundred\s+and\s+two))\b/gi, "Section 302");
       t = t.replace(/\b(?:section\s+one\s+thirty[- ]?eight)\b/gi, "Section 138");
+      t = t.replace(/\bread\s+with\s+sec(?:tion)?\.?\s*(\d+[A-Z]?)\b/gi, "read with Section $1");
+      t = t.replace(/\bu\s*\/\s*s\s*(\d+[A-Z]?)\b/gi, "U/s $1");
+      t = t.replace(/\bunder\s+sec(?:tion)?\.?\s+(\d+[A-Z]?)\b/gi, "under Section $1");
+      t = t.replace(/\bunder\s+sec(?:tions)?\.?\s+(\d+[A-Z]?(?:[,\s]+(?:\d+[A-Z]?|and))+)\b/gi, "under Sections $1");
       t = t.replace(/\bsection\s+(\d+[A-Z]?)\b/gi, "Section $1");
+      t = t.replace(/\bsec(?:tion)?\.?\s+(\d+[A-Z]?)\b/gi, "Section $1");
       t = t.replace(/\barticle\s+(\d+[A-Z]?)\b/gi, "Article $1");
 
       t = t.replace(/(?:कलम)\s*(?:एकशे\s*चव्वेचाळीस|एक\s*शे\s*चव्वेचाळीस)/giu, "कलम 144");
@@ -592,7 +631,29 @@
       t = t.replace(/(?:धारा)\s*(?:तीन\s*सौ\s*दो)/giu, "धारा 302");
       t = t.replace(/(?:धारा)\s*([०-९0-9]+)/giu, (m, num) => "धारा " + devanagariDigitsToArabic(num));
 
-      // 5. Acronyms & honorifics in original languages (NO translation)
+      // 8. Case Numbers & Headings
+      t = t.replace(/\b(?:crl\.?\s*a(?:ppl|ppeal)?\.?|criminal\s+appeal)\s*(?:no\.?)?\s*(\d+)\s*\/\s*(\d+)\b/gi, "Criminal Appeal No. $1/$2");
+      t = t.replace(/\bsessions\s+case\s*(?:no\.?)?\s*(\d+)\s*\/\s*(\d+)\b/gi, "Sessions Case No. $1/$2");
+      t = t.replace(/\bcrime\s*(?:no\.?)?\s*(\d+)\s*\/\s*(\d+)\b/gi, "Crime No. $1/$2");
+      t = t.replace(/\bleave\s+granted(?:\.|\b)/gi, "Leave granted.");
+
+      // 9. Sentencing, Imprisonment & Fines
+      t = t.replace(/\b(?:R\.?\s*I\.?|rigorous\s+imprisonment)\s*(\d+)\s*(month|months|year|years|day|days)\b/gi, "RI $1 $2");
+      t = t.replace(/\b(?:S\.?\s*I\.?|simple\s+imprisonment)\s*(\d+)\s*(month|months|year|years|day|days)\b/gi, "SI $1 $2");
+      t = t.replace(/\bfine\s+of\s+(?:Rs\.?|INR|'|`)\s*(\d+(?:,\d+)*(?:\/-)?)\b/gi, "fine of ₹ $1");
+      t = t.replace(/\bto\s+further\s+undergo\s+R\.?\s*I\.?\b/gi, "to further undergo RI");
+      t = t.replace(/\bperiod\s+already\s+undergone\b/gi, "period already undergone");
+
+      // 10. Latin Maxims & Doctrines
+      t = t.replace(/\bmens\s+rea\b/gi, "mens rea");
+      t = t.replace(/\bactus\s+reus\b/gi, "actus reus");
+      t = t.replace(/\bper\s+contra\b/gi, "Per contra");
+      t = t.replace(/\binter\s+se\b/gi, "inter se");
+      t = t.replace(/\bprima\s+facie\b/gi, "prima facie");
+      t = t.replace(/\bsuo\s+motu\b/gi, "suo motu");
+      t = t.replace(/\bres\s+judicata\b/gi, "res judicata");
+
+      // 11. Acronyms & honorifics in original languages (NO translation)
       t = t.replace(/\b(?:c\.?\s*p\.?\s*c\.?|c\s+p\s+c)\b/gi, "CPC");
       t = t.replace(/\b(?:cr\.?\s*p\.?\s*c\.?|cr\s+p\s+c)\b/gi, "CrPC");
       t = t.replace(/\b(?:i\.?\s*p\.?\s*c\.?|i\s+p\s+c)\b/gi, "IPC");
@@ -600,8 +661,10 @@
       t = t.replace(/\b(?:b\.?\s*n\.?\s*s\.?\s*s\.?|b\s+n\s+s\s+s)\b/gi, "BNSS");
       t = t.replace(/\b(?:b\.?\s*s\.?\s*a\.?|b\s+s\s+a)\b/gi, "BSA");
       t = t.replace(/\b(?:honourable\s+court|honorable\s+court|hon'ble\s+court)\b/gi, "Hon'ble Court");
-      t = t.replace(/\b(?:learned\s+counsel)\b/gi, "Learned Counsel");
-      t = t.replace(/\b(?:learned\s+senior\s+counsel)\b/gi, "Learned Senior Counsel");
+      t = t.replace(/\blearned\s+counsel\b/gi, "Learned Counsel");
+      t = t.replace(/\blearned\s+senior\s+counsel\b/gi, "Learned Senior Counsel");
+      t = t.replace(/\blearned\s+advocate\b/gi, "Learned Advocate");
+      t = t.replace(/\bpublic\s+prosecutor\b/gi, "Public Prosecutor");
 
       t = t.replace(/(?:^|\s)(?:सी\.?\s*पी\.?\s*सी\.?|सी\s+पी\s+सी|सीपीसी)(?=\s|[.,;:?!]|$)/giu, " सीपीसी");
       t = t.replace(/(?:^|\s)(?:सी\.?\s*आर\.?\s*पी\.?\s*सी\.?|सी\s*आर\s*पी\s*सी|सीआरपीसी)(?=\s|[.,;:?!]|$)/giu, " सीआरपीसी");
@@ -611,7 +674,7 @@
       t = t.replace(/(?:^|\s)(?:माननीय\s+न्यायालय|नामदार\s+कोर्ट|नामदार\s+न्यायालय)(?=\s|[.,;:?!]|$)/giu, " नामदार न्यायालय");
       t = t.replace(/(?:^|\s)(?:विद्वान\s+वकील|विद्वान\s+अधिवक्ता)(?=\s|[.,;:?!]|$)/giu, " विद्वान वकील");
 
-      // 6. Formatting cleanup: remove spaces around brackets, quotes, and punctuation
+      // 12. Formatting cleanup: remove spaces around brackets, quotes, and punctuation
       t = t.replace(/([(\[{])\s+/g, "$1");
       t = t.replace(/\s+([)\]}])/g, "$1");
       t = t.replace(/\s+([.,;:?!])/g, "$1");
@@ -622,7 +685,18 @@
       t = t.replace(/[ \t]*\n[ \t]*/g, "\n");
       t = t.replace(/\n{3,}/g, "\n\n");
 
-      // 7. Capitalize first letter of sentence after punctuation (for English letters)
+      // 13. Re-tighten legal abbreviations & citations
+      t = t.replace(/\bEx\.\s*([PD]\d+)\b/gi, "Ex.$1");
+      t = t.replace(/\bS\s*\/\s*o\.\s*/gi, "S/o. ");
+      t = t.replace(/\bD\s*\/\s*o\.\s*/gi, "D/o. ");
+      t = t.replace(/\bW\s*\/\s*o\.\s*/gi, "W/o. ");
+      t = t.replace(/\b([A-Z])\.\s+([A-Z])\.\s+([A-Z])\./g, "$1.$2.$3.");
+      t = t.replace(/\b([A-Z])\.\s+([A-Z])\./g, "$1.$2.");
+      t = t.replace(/\.{2,}/g, ".");
+      t = t.replace(/,\s*J\s*\./g, ", J.");
+      t = t.replace(/₹\s*(\d)/g, "₹ $1");
+
+      // 14. Capitalize first letter of sentence after punctuation (for English letters)
       t = t.replace(/^(\s*)([a-z])/, (m, p, c) => p + c.toUpperCase());
       t = t.replace(/([.?!]\s+)([a-z])/g, (m, p, c) => p + c.toUpperCase());
       t = t.replace(/(\n+)([a-z])/g, (m, p, c) => p + c.toUpperCase());

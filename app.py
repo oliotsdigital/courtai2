@@ -622,38 +622,94 @@ with col_main:
         label="Court Proceedings (Live Editable Record)",
         value=st.session_state.transcript,
         height=340,
-        placeholder="Speech-to-text transcription will appear here as you speak into the microphone...\n\nYou can also click '📋 Load Demo Transcript' below to instantly test the editor and document exports.",
+        placeholder="Speech-to-text transcription will appear here as you speak into the microphone...\n\nYou can also load official High Court judgment samples below to instantly test legal formatting, steno normalization, and exports.",
         help="Review and edit the transcription directly. Any manual edits will be included in Word and PDF exports.",
     )
     if updated_transcript != st.session_state.transcript:
         st.session_state.transcript = updated_transcript
 
-    # Action buttons under editor
-    col_act1, col_act2, col_act3 = st.columns([3, 4, 3])
-    with col_act1:
-        if st.button("📋 Load Judge's Dictation Sample", help=f"Loads a realistic {language_choice} Judge's dictation sample"):
-            if "Mixed" in language_choice:
-                demo_text = (
-                    "Order dictated in open court.\n\n"
-                    "This is an application for grant of interim bail under Section 439 of the CrPC. "
-                    "अर्जदार यांच्या विद्वान वकिलांचा युक्तिवाद ऐकून घेतला. "
-                    "In view of the medical grounds submitted in Exhibit 4, आरोपीला २५,००० रुपयांच्या जातमुचलक्यावर अंतरिम जामीन मंजूर करण्यात येत आहे.\n\n"
-                    "The applicant shall surrender his passport before the Registrar and shall not tamper with the prosecution witnesses. "
-                    "प्रतिवादी यांनी लेखी जबाब दाखल करण्यासाठी दोन आठवड्यांची मुदत मागितली आहे.\n\n"
-                    "The matter is adjourned to 15th October for further hearing. "
-                    "All concerned to act on the authenticated copy of this order."
-                )
-            elif "Marathi" in language_choice:
-                demo_text = (
-                    "खुली न्यायालयात दिलेला आदेश.\n\n"
-                    "सदर प्रकरण सीपीसी च्या कलम 144 अंतर्गत दाखल केलेल्या अर्जाशी संबंधित आहे. "
-                    "नामदार न्यायालयाने दोन्ही बाजूंचे म्हणणे ऐकून घेतले. "
-                    "अर्जदाराच्या विद्वान वकिलांनी असा युक्तिवाद केला की तातडीचा अंतरिम दिलासा देणे न्याय्य ठरेल.\n\n"
-                    "प्रतिवादींनी लेखी जबाब दाखल करण्यासाठी दोन आठवड्यांची मुदत मागितली आहे. "
-                    "पुढील युक्तिवादासाठी सुनावणी पुढील तारखेपर्यंत तहकूब करण्यात येत आहे."
-                )
-            elif "Hindi" in language_choice:
-                demo_text = (
+    # Sample Selection & Action buttons under editor
+    st.markdown("<div style='margin-top: 6px; margin-bottom: 8px;'><b>📋 Sample Judicial Transcripts & Orders (Real Courtroom Data):</b></div>", unsafe_allow_html=True)
+    sample_col1, sample_col2, sample_col3, sample_col4 = st.columns([3, 3, 2.5, 2.5])
+    
+    with sample_col1:
+        if st.button("⚖️ HC Judgment (Data 1)", help="Loads High Court murder appeal judgment with PW-1 to PW-10, Ex.P1 to Ex.P21, MO-1 to MO-17, inquest mahazar, and Section 302/34 IPC (from english_data_1.txt)"):
+            st.session_state.transcript = (
+                "S.C. Sharma, J.\n\n"
+                "1. Mallappa S/o. Ningappa Kanner, Hanamanth S/o. Ningappa Kanner and Dharamanna S/o. Ningappa Kanner "
+                "are the Appellants before us who were put on trial, as Accused Nos. 3, 4 and 5, for the commission of murder "
+                "of deceased Marthandappa and were acquitted by the Trial Court/Fast Track Court-I at Gulbarga on 24.03.2005. "
+                "The State preferred Criminal Appeal No. 1363/2005 before the High Court which reversed the order of acquittal and "
+                "convicted the Appellants under Section 302 read with Section 34 of the Indian Penal Code.\n\n"
+                "2. An FIR was registered against Accused persons as Crime No. 78/97 and sent through PW-1 to the JMFC, Shorapur. "
+                "In the presence of Panchas (PW-7 and Malleshi), PW-10 conducted inquest mahazar on the dead body of Marthandappa as per Ex.P9. "
+                "From the scene of offence, he seized MO-1 (bullock-cart peg), MO-12 (pair of chappal), MO-13 (towel) and MO-14 (blood stained mud). "
+                "PW-5 (doctor) conducted post-mortem examination and found 9 ante-mortem injuries, issuing post-mortem report Ex.P3.\n\n"
+                "3. FSL report was received as Ex.P19 and Ex.P20. The prosecution examined PW-1 to PW-10 and marked Ex.P1 to Ex.P21 as well as MOs 1 to 17. "
+                "The defence marked Ex.D1. During cross-examination, PW-4 admitted material contradictions with the wound certificate Ex.P12. "
+                "Per contra, learned counsel for the Respondent State submitted that PW-3 was an ocular witness and PW-4 was an injured witness.\n\n"
+                "4. Accused Nos. 1 to 5 are brothers inter se. The chain of circumstances fails to establish mens rea or exclude reasonable doubt. "
+                "The impugned judgment of the High Court is set aside, and the order of acquittal of the Trial Court is restored. "
+                "The Appellants are acquitted of all charges and directed to be released forthwith."
+            )
+            st.session_state.demo_data_loaded = True
+            st.session_state.last_transcription_status = {
+                "type": "success",
+                "msg": "High Court Judgment sample (from english_data_1.txt) loaded into editor.",
+            }
+            st.rerun()
+
+    with sample_col2:
+        if st.button("⚖️ HC Sentencing (Data 2)", help="Loads High Court criminal appeal conviction modification with tailoring scissors, Section 307/326/341/506B IPC, and RI sentences (from english_data_2.txt)"):
+            st.session_state.transcript = (
+                "Rajesh Bindal, J.\n"
+                "Leave granted.\n\n"
+                "1. The Accused has filed the present appeal challenging his conviction and sentence. "
+                "The impugned judgment of the High Court is under appeal vide which the judgment and order of sentence passed by the Trial Court was upheld. "
+                "The conviction and sentence of the Appellant is as under:\n"
+                "- Section 341 Indian Penal Code: RI 1 month.\n"
+                "- Section 506B Indian Penal Code: RI 6 months.\n"
+                "- Section 307 Indian Penal Code: RI 5 years and fine of ₹ 1,500/-, in default of payment to further undergo RI 1 year.\n\n"
+                "2. The case of the prosecution as evident from the FIR is that the complainant Salikram was stopped and threatened by the Appellant. "
+                "Rajkumar alias Munna (PW-6) was also with him. The Appellant caused incised injuries on the left thigh with scissors. "
+                "The injured appeared as PW-1, whereas Kantilal (PW-8) and Radhey Shyam (PW-7) were declared hostile.\n\n"
+                "3. Learned Counsel for the Appellant submitted that it is a case of sudden fight without mens rea, and placed on record a compromise deed dated 30.04.2019. "
+                "The weapon used is small scissors used by tailors. In our view, the offence will not fall within Section 307 Indian Penal Code, but falls within "
+                "the four corners of Section 326 Indian Penal Code as a sharp-edged weapon was used without intention to cause death.\n\n"
+                "4. At the time of hearing, it was pointed out that the Appellant had already undergone actual sentence of 11 months and 24 days. "
+                "In our view, the sentence awarded to the Appellant deserves to be reduced to the period already undergone. "
+                "The amount of fine imposed is sustained. The impugned judgments passed by the Courts below are modified to the extent mentioned above and the appeal is allowed."
+            )
+            st.session_state.demo_data_loaded = True
+            st.session_state.last_transcription_status = {
+                "type": "success",
+                "msg": "High Court Sentencing Modification sample (from english_data_2.txt) loaded into editor.",
+            }
+            st.rerun()
+
+    with sample_col3:
+        if st.button("🌐 Mixed English+MR", help="Loads a realistic bilingual Judge's dictation sample (English bail order + Marathi arguments & bonds)"):
+            st.session_state.transcript = (
+                "Order dictated in open court.\n\n"
+                "This is an application for grant of interim bail under Section 439 of the CrPC. "
+                "अर्जदार यांच्या विद्वान वकिलांचा युक्तिवाद ऐकून घेतला. "
+                "In view of the medical grounds submitted in Ex.P4, आरोपीला २५,००० रुपयांच्या जातमुचलक्यावर अंतरिम जामीन मंजूर करण्यात येत आहे.\n\n"
+                "The applicant shall surrender his passport before the Registrar and shall not tamper with the prosecution witnesses PW-1 to PW-4. "
+                "प्रतिवादी यांनी लेखी जबाब दाखल करण्यासाठी दोन आठवड्यांची मुदत मागितली आहे.\n\n"
+                "The matter is adjourned to 15th October for further hearing. "
+                "All concerned to act on the authenticated copy of this order."
+            )
+            st.session_state.demo_data_loaded = True
+            st.session_state.last_transcription_status = {
+                "type": "success",
+                "msg": "Mixed English + Marathi Judge's dictation loaded into editor.",
+            }
+            st.rerun()
+
+    with sample_col4:
+        if st.button("🇮🇳 Marathi / Hindi Order", help="Loads vernacular Judge's dictation in Marathi or Hindi based on language selection"):
+            if "Hindi" in language_choice:
+                st.session_state.transcript = (
                     "खुली अदालत में आदेश सुनाया गया।\n\n"
                     "आवेदक उपस्थित हैं और विद्वान अधिवक्ता द्वारा उनका प्रतिनिधित्व किया जा रहा है। प्रतिवादी भी उपस्थित हैं। "
                     "यह मामला सीपीसी की धारा 144 के तहत दायर आवेदन से संबंधित है।\n\n"
@@ -663,26 +719,25 @@ with col_main:
                     "मामले को आगे की बहस के लिए अगली सुनवाई की तारीख तक स्थगित किया जाता है।"
                 )
             else:
-                demo_text = (
-                    "Order dictated in open court.\n\n"
-                    "The applicant is present and represented by learned counsel. The respondent is also present. "
-                    "The matter concerns the application filed under Section 144 of the CPC.\n\n"
-                    "The Court has heard the submissions of both parties. The learned counsel for the applicant "
-                    "submits that urgent interim relief is warranted in view of the imminent threat.\n\n"
-                    "The respondent seeks two weeks time to file the written statement. "
-                    "The matter is adjourned to the next date of hearing for further arguments."
+                st.session_state.transcript = (
+                    "खुली न्यायालयात दिलेला आदेश.\n\n"
+                    "सदर प्रकरण सीपीसी च्या कलम 144 अंतर्गत दाखल केलेल्या अर्जाशी संबंधित आहे. "
+                    "नामदार न्यायालयाने दोन्ही बाजूंचे म्हणणे ऐकून घेतले. "
+                    "अर्जदाराच्या विद्वान वकिलांनी असा युक्तिवाद केला की तातडीचा अंतरिम दिलासा देणे न्याय्य ठरेल.\n\n"
+                    "प्रतिवादींनी लेखी जबाब दाखल करण्यासाठी दोन आठवड्यांची मुदत मागितली आहे. "
+                    "पुढील युक्तिवादासाठी सुनावणी पुढील तारखेपर्यंत तहकूब करण्यात येत आहे."
                 )
-            st.session_state.transcript = demo_text
             st.session_state.demo_data_loaded = True
             st.session_state.last_transcription_status = {
                 "type": "success",
-                "msg": f"Realistic {language_choice} Judge's dictation loaded into editor.",
+                "msg": f"{language_choice} Judge's dictation loaded into editor.",
             }
             st.rerun()
 
-    with col_act2:
+    col_act1, col_act2 = st.columns([1, 1])
+    with col_act1:
         if st.session_state.transcript.strip():
-            if st.button("✨ Apply Steno Normalization", help="Converts spoken steno commands into symbols and standardizes legal citations while preserving original languages verbatim"):
+            if st.button("✨ Apply Steno Normalization", help="Converts spoken steno commands into symbols and standardizes legal citations while preserving original languages verbatim", use_container_width=True):
                 text_with_cmds = process_voice_commands(st.session_state.transcript, enabled=True)
                 st.session_state.transcript = normalize_legal_terms(
                     text_with_cmds,
@@ -690,12 +745,13 @@ with col_main:
                 )
                 st.rerun()
 
-    with col_act3:
-        if st.button("📝 Generate Judge's Order Draft", help="Structures the Judge's dictated transcript into an official court order draft"):
+    with col_act2:
+        if st.button("📝 Generate Judge's Order Draft", help="Structures the Judge's dictated transcript into an official court order draft", use_container_width=True):
             with st.spinner("Structuring Judge's order draft..."):
                 draft = generate_draft_proceedings(st.session_state.transcript)
                 st.session_state.draft_notes = draft
                 st.rerun()
+
 
 with col_tools:
     # Right Column: Document Exports & Draft Notes

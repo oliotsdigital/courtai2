@@ -27,9 +27,9 @@ _STENO_RULES_CACHE: Optional[List[Tuple[re.Pattern, str, str]]] = None
 CONVERSATIONAL_GUARDS = [
     # Full stop (e.g. came to a full stop)
     (re.compile(r'(\b(?:a|an|the|complete)\s+)full\s+stop\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_FS§§'),
-    # Period (e.g. period of limitation, grace period)
-    (re.compile(r'(\b(?:a|an|the|this|that|grace|cooling|waiting)\s+)period\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_PR§§'),
-    (re.compile(r'\bperiod(\s+(?:of|for|in|from)\b)', re.IGNORECASE), lambda m: '§§GUARD_PR§§' + m.group(1)),
+    # Period (e.g. period of limitation, grace period, period already undergone)
+    (re.compile(r'(\b(?:a|an|the|this|that|to|such|grace|cooling|waiting|limitation|probation|intervening)\s+)period\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_PR§§'),
+    (re.compile(r'\bperiod(\s+(?:of|for|in|from|to|already|undergone|elapsed|specified)\b)', re.IGNORECASE), lambda m: '§§GUARD_PR§§' + m.group(1)),
     # Enter (e.g. did not enter into agreement, to enter appearance)
     (re.compile(r'(\b(?:to|shall|did|not|will|cannot|may|might)\s+)enter\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_ENT§§'),
     (re.compile(r'\benter(\s+(?:into|upon|appearance|plea)\b)', re.IGNORECASE), lambda m: '§§GUARD_ENT§§' + m.group(1)),
