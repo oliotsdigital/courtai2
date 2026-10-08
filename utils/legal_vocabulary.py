@@ -472,6 +472,17 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     normalized = re.sub(r",\s*J\s*\.", ", J.", normalized)
     normalized = re.sub(r"₹\s*(\d)", r"₹ \1", normalized)
 
-    return normalized.strip()
+    # If the output consists purely of whitespace/breaks, preserve intentional break symbol
+    if re.fullmatch(r"[\r\n\t ]*", normalized):
+        if "\n\n" in normalized:
+            return "\n\n"
+        elif "\n" in normalized:
+            return "\n"
+        elif " " in normalized:
+            return " "
+        return ""
+
+    # Strip horizontal spaces/tabs, preserving leading and trailing newlines
+    return normalized.strip(" \t")
 
 

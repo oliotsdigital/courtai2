@@ -127,16 +127,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("transcript_final", (data) => {
       // Completed utterance with steno rules & legal normalization applied
-      if (data && data.text && data.text.trim()) {
-        const text = data.text.trim();
-        finalSpeechText += (finalSpeechText ? " " : "") + text;
+      if (data && data.text) {
+        const text = data.text;
+        finalSpeechText = appendToTranscript(finalSpeechText, text);
         finalTranscriptBuffer.textContent = finalSpeechText;
         interimSpeechBuffer.textContent = "";
         liveStreamBox.scrollTop = liveStreamBox.scrollHeight;
 
         // Synchronize directly into main judicial editor
-        const currentEditor = transcriptTextarea.value.trim();
-        transcriptTextarea.value = currentEditor ? currentEditor + " " + text : text;
+        transcriptTextarea.value = appendToTranscript(transcriptTextarea.value, text);
         updateEditorStats();
       }
     });
@@ -229,6 +228,71 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
+  // Transcript Appender Helper
+  // Handles new paragraphs, lines, spaces, and punctuation correctly
+  // ==========================================
+  function appendToTranscript(existing, incoming) {
+    if (incoming === undefined || incoming === null || incoming === "") return existing;
+    if (!existing) {
+      return incoming.replace(/^[ \t]+/, "");
+    }
+
+    // Pure paragraph break command
+    if (incoming === "\n\n") {
+      if (existing.endsWith("\n\n")) return existing;
+      if (existing.endsWith("\n")) return existing + "\n";
+      return existing + "\n\n";
+    }
+
+    // Pure line break command
+    if (incoming === "\n") {
+      if (existing.endsWith("\n")) return existing;
+      return existing + "\n";
+    }
+
+    // Pure space command
+    if (incoming === " ") {
+      if (existing.endsWith(" ") || existing.endsWith("\n")) return existing;
+      return existing + " ";
+    }
+
+    // If incoming starts with paragraph breaks
+    if (incoming.startsWith("\n\n")) {
+      const remainder = incoming.replace(/^\n+/, "");
+      if (existing.endsWith("\n\n")) {
+        return existing + remainder;
+      } else if (existing.endsWith("\n")) {
+        return existing + "\n" + remainder;
+      } else {
+        return existing + "\n\n" + remainder;
+      }
+    }
+
+    // If incoming starts with a single line break
+    if (incoming.startsWith("\n")) {
+      const remainder = incoming.replace(/^\n+/, "");
+      if (existing.endsWith("\n")) {
+        return existing + remainder;
+      } else {
+        return existing + "\n" + remainder;
+      }
+    }
+
+    // If existing text already ends with a newline, line break, or space
+    if (existing.endsWith("\n") || existing.endsWith(" ")) {
+      return existing + incoming;
+    }
+
+    // If incoming text starts with punctuation like comma, period, colon, semicolon, etc.
+    if (/^[.,;:?!%)\]}]/.test(incoming)) {
+      return existing + incoming;
+    }
+
+    // Standard word continuation: single space separator
+    return existing + " " + incoming;
+  }
+
+  // ==========================================
   // Live Steno Shorthand Translator (Client-side)
   // Converts spoken commands to punctuation & symbols
   // ==========================================
@@ -284,9 +348,12 @@ document.addEventListener("DOMContentLoaded", () => {
       { regex: /\b(plus\s*sign)\b/gi, replacement: "+" },
       { regex: /\b(equals?\s*(?:to|sign)?)\b/gi, replacement: "=" },
 
-      // 12. Formatting breaks
-      { regex: /\b(new\s*paragraph|next\s*paragraph|paragraph\s*break)\b/gi, replacement: "\n\n" },
-      { regex: /\b(new\s*line|next\s*line|line\s*break)\b/gi, replacement: "\n" },
+      // 12. Formatting breaks: Next paragraph, new paragraph, next line, new line, space, tab
+      { regex: /\b(start\s+(?:a\s+)?new\s+paragraph|start\s+(?:a\s+)?next\s+paragraph|a\s+next\s+paragraph|a\s+new\s+paragraph|next\s+paragraph|new\s+paragraph|paragraph\s+break)\b/gi, replacement: "\n\n" },
+      { regex: /\b(start\s+(?:a\s+)?new\s+line|start\s+(?:a\s+)?next\s+line|a\s+next\s+line|a\s+new\s+line|next\s+line|new\s+line|line\s+break|press\s+enter|hit\s+enter)\b/gi, replacement: "\n" },
+      { regex: /\b(blank\s+space|white\s+space|single\s+space|space\s+bar|give\s+(?:a\s+)?space|add\s+(?:a\s+)?space|insert\s+(?:a\s+)?space|a\s+space)\b/gi, replacement: " " },
+      { regex: /(?<=[.,;:?!])\s*\bspace\b/gi, replacement: " " },
+      { regex: /\b(tab\s+space|tab\s+key|indent)\b/gi, replacement: "    " },
 
       // 13. Common Courtroom Witness & Exhibit Shorthand
       { regex: /\b(p\s*w|prosecution\s*witness)\s*([0-9]+)\b/gi, replacement: "PW-$2" },
@@ -319,9 +386,17 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/"\s+([^"\n]+?)\s+"/g, '"$1"') // clean spaces inside double quotes
       .replace(/,\s*,+/g, ",") // deduplicate consecutive commas
       .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n[ \t]+/g, "\n");
+      .replace(/\n[ \t]+/g, "\n")
+      .replace(/(\n+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase()); // Capitalize words after newline
 
-    return cleaned;
+    // If pure whitespace or break, preserve it exactly
+    if (/^[\r\n\t ]+$/.test(cleaned)) {
+      if (cleaned.includes("\n\n")) return "\n\n";
+      if (cleaned.includes("\n")) return "\n";
+      return " ";
+    }
+
+    return cleaned.trim();
   }
 
   // ==========================================
@@ -527,7 +602,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const transcriptPart = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           const converted = applyLiveStenoShothand(transcriptPart);
-          finalSpeechText += (finalSpeechText.endsWith(" ") || finalSpeechText.endsWith("\n") || converted.startsWith(",") || converted.startsWith(".") ? "" : " ") + converted;
+          finalSpeechText = appendToTranscript(finalSpeechText, converted);
+
+          // Synchronize directly into main judicial editor
+          transcriptTextarea.value = appendToTranscript(transcriptTextarea.value, converted);
+          updateEditorStats();
         } else {
           interim += transcriptPart;
         }

@@ -47,6 +47,15 @@ CONVERSATIONAL_GUARDS = [
     (re.compile(r'\bpoint(\s+(?:of|out|for|is|raised)\b)', re.IGNORECASE), lambda m: '§§GUARD_PT§§' + m.group(1)),
     # Colon (e.g. colon cancer, colon surgery)
     (re.compile(r'\bcolon(\s+(?:cancer|surgery|cleanse)\b)', re.IGNORECASE), lambda m: '§§GUARD_CLN§§' + m.group(1)),
+    # Space (e.g. parking space, open space, space between, storage space)
+    (re.compile(r'(\b(?:outer|parking|open|office|living|storage|empty|intervening|confined|cyber|air|personal)\s+)space\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_SP§§'),
+    (re.compile(r'\bspace(\s+(?:between|available|crunch|station|craft|shuttle|exploration|travel|time)\b)', re.IGNORECASE), lambda m: '§§GUARD_SP§§' + m.group(1)),
+    # Paragraph (e.g. paragraph 4, paragraph above, in this paragraph)
+    (re.compile(r'(\b(?:in|of|from|under|refer\s+to|see|this|that|the|first|second|third|fourth|fifth|preceding|following|above|below)\s+)paragraph\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_PG§§'),
+    (re.compile(r'\bparagraph(\s+(?:no|number|above|below|referred|of)\b)', re.IGNORECASE), lambda m: '§§GUARD_PG§§' + m.group(1)),
+    # Line (e.g. line of control, line above, first line)
+    (re.compile(r'(\b(?:of|in|on|along|under|across|between|the|this|that|first|second|third|bottom|top|fine|front)\s+)line\b', re.IGNORECASE), lambda m: m.group(1) + '§§GUARD_LN§§'),
+    (re.compile(r'\bline(\s+(?:of|above|below|cross|crossed|crossing)\b)', re.IGNORECASE), lambda m: '§§GUARD_LN§§' + m.group(1)),
 ]
 
 GUARD_RESTORATIONS = [
@@ -56,6 +65,9 @@ GUARD_RESTORATIONS = [
     ('§§GUARD_RET§§', 'return'),
     ('§§GUARD_PT§§', 'point'),
     ('§§GUARD_CLN§§', 'colon'),
+    ('§§GUARD_SP§§', 'space'),
+    ('§§GUARD_PG§§', 'paragraph'),
+    ('§§GUARD_LN§§', 'line'),
 ]
 
 
@@ -196,12 +208,34 @@ def load_steno_rules(force_reload: bool = False) -> List[Tuple[re.Pattern, str, 
         ("कंस पूर्ण", ")"),
         ("कंस बंद", ")"),
         
-        # Line & paragraph breaks
+        # Line & paragraph breaks & spaces
+        ("start a new paragraph", "\n\n"),
+        ("start new paragraph", "\n\n"),
+        ("a next paragraph", "\n\n"),
+        ("a new paragraph", "\n\n"),
         ("next paragraph", "\n\n"),
         ("new paragraph", "\n\n"),
         ("paragraph break", "\n\n"),
+        ("start a new line", "\n"),
+        ("start new line", "\n"),
+        ("a next line", "\n"),
+        ("a new line", "\n"),
         ("next line", "\n"),
         ("new line", "\n"),
+        ("line break", "\n"),
+        ("press enter", "\n"),
+        ("blank space", " "),
+        ("white space", " "),
+        ("single space", " "),
+        ("space bar", " "),
+        ("a space", " "),
+        ("give space", " "),
+        ("add space", " "),
+        ("insert space", " "),
+        ("space", " "),
+        ("tab space", "    "),
+        ("tab key", "    "),
+        ("indent", "    "),
         ("पुढील परिच्छेद", "\n\n"),
         ("पुढील ओळ", "\n"),
         ("नवा परिच्छेद", "\n\n"),
@@ -331,6 +365,32 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
         flags=re.IGNORECASE,
     )
 
+    # Step 2f: Explicit guarantee: Paragraph breaks ("next paragraph", "a new paragraph", "new paragraph", etc.)
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:(?:start\s+)?(?:a\s+)?(?:next|new)\s+paragraphs?|paragraphs?\s+break)(?![A-Za-z0-9\u0900-\u097F])",
+        "\n\n",
+        processed,
+        flags=re.IGNORECASE,
+    )
+
+    # Step 2g: Explicit guarantee: Line breaks ("next line", "new line", "a new line", "line break", etc.)
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:(?:start\s+)?(?:a\s+)?(?:next|new)\s+lines?|lines?\s+break|press\s+enter|hit\s+enter)(?![A-Za-z0-9\u0900-\u097F])",
+        "\n",
+        processed,
+        flags=re.IGNORECASE,
+    )
+
+    # Step 2h: Explicit guarantee: Spoken spaces ("blank space", "a space", "white space", "space bar", etc.)
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:(?:add|give|insert)\s+(?:a\s+)?space|blank\s+space|white\s+space|single\s+space|space\s+bar|a\s+space)(?![A-Za-z0-9\u0900-\u097F])",
+        " ",
+        processed,
+        flags=re.IGNORECASE,
+    )
+    # Standalone 'space' after punctuation mark
+    processed = re.sub(r"(?<=[.,;:?!])\s*space(?![A-Za-z0-9\u0900-\u097F])", " ", processed, flags=re.IGNORECASE)
+
     # Step 3: Restore conversational phrases
     for placeholder, original in GUARD_RESTORATIONS:
         processed = processed.replace(placeholder, original)
@@ -367,7 +427,18 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
     processed = re.sub(r"([.?!]\s+)([a-z])", capitalize_match, processed)
     processed = re.sub(r"(\n+)([a-z])", capitalize_match, processed)
 
-    return processed.strip()
+    # If the output consists purely of whitespace/breaks, preserve intentional break symbol
+    if re.fullmatch(r"[\r\n\t ]*", processed):
+        if "\n\n" in processed:
+            return "\n\n"
+        elif "\n" in processed:
+            return "\n"
+        elif " " in processed:
+            return " "
+        return ""
+
+    # Strip horizontal spaces/tabs, preserving leading and trailing newlines
+    return processed.strip(" \t")
 
 
 def get_openai_client(api_key: Optional[str] = None) -> Optional[OpenAI]:
