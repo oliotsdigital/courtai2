@@ -75,9 +75,9 @@ def export_to_docx(transcript: str, metadata: Optional[Dict[str, Any]] = None) -
     """
     meta = metadata or {}
     now_str = meta.get("date") or datetime.now().strftime("%d %B %Y, %I:%M %p")
-    language = meta.get("language", "Auto Detect")
+    language = meta.get("language", "Indian English (Courtroom Stenography)")
     title = meta.get("title", "COURT PROCEEDINGS / JUDGE'S DICTATION")
-    subtitle = meta.get("subtitle", "Official Judicial Stenographer Record (Verbatim)")
+    subtitle = meta.get("subtitle", "Official Judicial Stenographer Record (Indian English)")
 
     doc = Document()
 
@@ -246,9 +246,9 @@ def export_to_pdf(transcript: str, metadata: Optional[Dict[str, Any]] = None) ->
     """
     meta = metadata or {}
     now_str = meta.get("date") or datetime.now().strftime("%d %B %Y, %I:%M %p")
-    language = meta.get("language", "Mixed (Verbatim)")
+    language = meta.get("language", "Indian English (Courtroom Stenography)")
     title = meta.get("title", "COURT PROCEEDINGS / JUDGE'S DICTATION")
-    subtitle = meta.get("subtitle", "Official Judicial Stenographer Record (Verbatim)")
+    subtitle = meta.get("subtitle", "Official Judicial Stenographer Record (Indian English)")
 
     pdf_buffer = io.BytesIO()
     # 54 points = 0.75 inch margin

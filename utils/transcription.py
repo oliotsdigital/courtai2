@@ -540,7 +540,7 @@ Create a structured 'JUDGE'S DICTATION / COURT PROCEEDINGS — DRAFT' based ONLY
 CRITICAL INSTRUCTIONS:
 1. Do NOT invent or assume any facts, dates, names, or statutes not present in the transcript.
 2. If a section has no details in the transcript, write 'Not specified in proceedings'.
-3. Maintain language fidelity: If the Judge's transcript is in English, write in English. If in Marathi, write in Marathi. If mixed English-Marathi code-switching, preserve the mixed language verbatim. NEVER translate.
+3. Maintain language fidelity: The transcript and proceedings are strictly in Indian English. Preserve all citations, sections, and legal terminology verbatim.
 4. Label clearly: 'Official Stenographer Draft — requires signature/review by the Hon'ble Presiding Judge.'
 5. Adhere strictly to this exact outline:
 
@@ -566,7 +566,7 @@ TRANSCRIPT:
             completion = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a precise Judicial Stenographer adhering strictly to the Judge's spoken record. You preserve original languages verbatim without translating."},
+                    {"role": "system", "content": "You are a precise Judicial Stenographer adhering strictly to the Judge's spoken Indian English record. You transcribe courtroom English verbatim."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.2,

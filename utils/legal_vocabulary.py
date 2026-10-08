@@ -230,57 +230,23 @@ LEGAL_TERMS: List[str] = LEGAL_TERMS_EN + LEGAL_TERMS_MR + LEGAL_TERMS_HI
 
 def get_legal_prompt_context(language_code: Optional[str] = None) -> str:
     """
-    Constructs a concise legal prompt for the OpenAI Audio API.
+    Constructs a concise Indian English legal prompt for the OpenAI Audio API.
     CRITICAL STENOGRAPHY INSTRUCTION:
+    - Transcribe verbatim as spoken in Indian English courtroom standard.
+    - Accurately capture Indian legal citations, sections, witness notations, and exhibits.
     - Never translate.
-    - Spoken English is typed in English.
-    - Spoken Marathi is typed in Marathi (Devanagari).
-    - Spoken Hindi is typed in Hindi (Devanagari).
-    - Mixed language is typed verbatim in both scripts.
     """
-    lang = (language_code or "").lower()
-
-    if lang in ("mr", "mr-in"):
-        return (
-            "न्यायाधीशांचे मौखिक डिक्टेशन / न्यायालयीन कामकाज प्रतिलेख: नामदार न्यायालय, अर्जदार, प्रतिवादी, "
-            "विद्वान वकील, प्रतिज्ञापत्र, युक्तिवाद, पुरावा, कलम 144, कलम 420, कलम 302, कलम 138, कलम 482, कलम 439, "
-            "सीपीसी, सीआरपीसी, आयपीसी, बीएनएस, जामीन मंजूर, अंतरिम दिलासा, आदेश, निकाल. "
-            "Strict instruction: Transcribe exactly as spoken without translation. Marathi in Devanagari, English in English."
-        )
-    elif lang in ("hi", "hi-in"):
-        return (
-            "न्यायाधीश महोदय का मौखिक डिक्टेशन / न्यायालयीन कार्यवाही प्रतिलेख: माननीय न्यायालय, आवेदक, प्रतिवादी, "
-            "विद्वान अधिवक्ता, शपथ पत्र, दलीलें, साक्ष्य, धारा 144, धारा 420, धारा 302, धारा 138, धारा 482, "
-            "सीपीसी, सीआरपीसी, आईपीसी, बीएनएस, जमानत, अंतरिम राहत, आदेश, निर्णय। "
-            "Strict instruction: Transcribe exactly as spoken without translation. Hindi in Devanagari, English in English."
-        )
-    elif lang in ("en", "en-in"):
-        return (
-            "Official judicial stenographer verbatim record of Judge's oral statement, court dictation, and judgment: "
-            "Hon'ble Court, Judge, Rajesh Bindal, J., S.C. Sharma, J., Principal Sessions Judge, JMFC, CJM, "
-            "PW-1 to PW-10, DW-1, CW-1, A1 to A8, Accused No. 1, S/o., D/o., W/o., alias, "
-            "Ex.P1 to Ex.P21, Ex.D1, MO-1 to MO-17, Inquest Mahazar, Seizure Mahazar, Panchanama, "
-            "FSL report, post-mortem report, wound certificate, ante-mortem injuries, cross-examination, Examination-in-Chief, "
-            "Section 302 read with Section 34, Sections 147, 148, 149, 302, 307, 326, 341, 504, 506B IPC, "
-            "Section 235 CrPC, RI 1 month, RI 6 months, RI 5 years, fine of ₹ 1,500/-, period already undergone, "
-            "mens rea, actus reus, per contra, inter se, prima facie, FIR, Crime No., Criminal Appeal No., Sessions Case No. "
-            "Transcribe verbatim as spoken without translation."
-        )
-    else:
-        # Mixed (English + Marathi / Hindi) - DEFAULT FOR INDIAN COURTS
-        return (
-            "Official judicial stenographer verbatim record of Judge's oral dictation, court proceedings, and orders. "
-            "CRITICAL RULE: Transcribe exactly as spoken without any translation. "
-            "Type English speech in English (Latin script). "
-            "Type Marathi speech in Marathi (Devanagari script). "
-            "Type Hindi speech in Hindi (Devanagari script). "
-            "If the Judge speaks mixed English and Marathi or switches languages, transcribe the mixed language verbatim. "
-            "Do NOT translate Marathi to English or English to Marathi. "
-            "Terms: Hon'ble Court, Order, PW-1, Ex.P1, MO-1, Section 302 read with Section 34, Sections 307, 326, 341, 506B IPC, "
-            "RI 5 years, CPC, CrPC, IPC, BNS, FIR, inquest mahazar, post-mortem report, cross-examination, "
-            "नामदार न्यायालय, अर्जदार, प्रतिवादी, विद्वान वकील, कलम 144, कलम 420, कलम 439, सीपीसी, सीआरपीसी, जामीन मंजूर, अंतरिम दिलासा, निकाल, "
-            "माननीय न्यायालय, आवेदक, धारा 144, जमानत."
-        )
+    return (
+        "Official judicial stenographer verbatim record of Judge's oral statement, court dictation, and judgment in Indian English: "
+        "Hon'ble Court, Judge, Rajesh Bindal, J., S.C. Sharma, J., Principal Sessions Judge, JMFC, CJM, "
+        "PW-1 to PW-10, DW-1, CW-1, A1 to A8, Accused No. 1, S/o., D/o., W/o., alias, "
+        "Ex.P1 to Ex.P21, Ex.D1, MO-1 to MO-17, Inquest Mahazar, Seizure Mahazar, Panchanama, "
+        "FSL report, post-mortem report, wound certificate, ante-mortem injuries, cross-examination, Examination-in-Chief, "
+        "Section 302 read with Section 34, Sections 147, 148, 149, 302, 307, 326, 341, 504, 506B IPC, "
+        "Section 235 CrPC, RI 1 month, RI 6 months, RI 5 years, fine of ₹ 1,500/-, period already undergone, "
+        "mens rea, actus reus, per contra, inter se, prima facie, FIR, Crime No., Criminal Appeal No., Sessions Case No. "
+        "Transcribe verbatim as spoken without translation. Output strictly in Indian English."
+    )
 
 
 # Devanagari digits to Arabic mapping

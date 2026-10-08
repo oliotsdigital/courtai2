@@ -289,8 +289,8 @@ def export_docx():
 
     metadata = {
         "title": title,
-        "subtitle": "Official Judicial Stenographer Record (English)",
-        "language": "English (Courtroom Stenography)",
+        "subtitle": "Official Judicial Stenographer Record (Indian English)",
+        "language": "Indian English (Courtroom Stenography)",
         "case_no": case_no,
         "date": datetime.now().strftime("%d %B %Y, %I:%M %p"),
     }
@@ -319,8 +319,8 @@ def export_pdf():
 
     metadata = {
         "title": title,
-        "subtitle": "Official Judicial Stenographer Record (English)",
-        "language": "English (Courtroom Stenography)",
+        "subtitle": "Official Judicial Stenographer Record (Indian English)",
+        "language": "Indian English (Courtroom Stenography)",
         "case_no": case_no,
         "date": datetime.now().strftime("%d %B %Y, %I:%M %p"),
     }
@@ -400,9 +400,9 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "8501"))
     debug = os.getenv("FLASK_ENV", "production").lower() == "development"
     print(f"\n=======================================================")
-    print(f"🏛️  CourtScribe AI - English Judicial Stenographer Server")
+    print(f"🏛️  CourtScribe AI - Indian English Judicial Stenographer Server")
     print(f"📍 Local URL: http://localhost:{port}")
-    print(f"🔒 Mode: English Language Only (Dual-WebSocket Realtime Engine)")
+    print(f"🔒 Mode: Indian English Only (Dual-WebSocket Realtime Engine)")
     print(f"=======================================================\n")
     socketio.run(app, host="0.0.0.0", port=port, debug=debug, allow_unsafe_werkzeug=True)
 

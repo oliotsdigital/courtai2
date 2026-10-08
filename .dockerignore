@@ -12,6 +12,4 @@ __pycache__
 .env.local
 .DS_Store
 *.swp
-*.bak
-training/
 scratch/
