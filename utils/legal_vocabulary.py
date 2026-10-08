@@ -482,6 +482,15 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     for pattern, replacement in honorific_patterns:
         normalized = pattern.sub(replacement, normalized)
 
+    # 13b. Standardize spoken 'comma' command into ','
+    normalized = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:comma|koma|alpa\s+viram|alpaviram|swalpa\s+viram|swalpaviram|कॉमा|स्वल्पविराम|अल्पविराम)(?![A-Za-z0-9\u0900-\u097F])",
+        ",",
+        normalized,
+        flags=re.IGNORECASE,
+    )
+    normalized = re.sub(r",\s*,+", ",", normalized)
+
     # 14. Clean up spaces around punctuation
     normalized = re.sub(r"\s+([.,;:?!])", r"\1", normalized)
     normalized = re.sub(r"([.,;:?!])([A-Za-z0-9\u0900-\u097F])", r"\1 \2", normalized)

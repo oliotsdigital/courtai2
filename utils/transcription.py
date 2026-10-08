@@ -14,11 +14,17 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import openai
 from openai import OpenAI
+from dotenv import load_dotenv
+
+# Ensure .env is explicitly loaded from application root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(dotenv_path=os.path.join(BASE_DIR, ".env"), override=True)
+
 from utils.legal_vocabulary import get_legal_prompt_context, normalize_legal_terms
 
 # Configurable model names with defaults
-DEFAULT_TRANSCRIPTION_MODEL = os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-live-transcribe")
-DEFAULT_FINAL_MODEL = os.getenv("OPENAI_FINAL_TRANSCRIPTION_MODEL", "gpt-transcribe")
+DEFAULT_TRANSCRIPTION_MODEL = os.getenv("OPENAI_TRANSCRIPTION_MODEL", "whisper-1")
+DEFAULT_FINAL_MODEL = os.getenv("OPENAI_FINAL_TRANSCRIPTION_MODEL", "whisper-1")
 
 # Cache for compiled steno commands from JSON files
 _STENO_RULES_CACHE: Optional[List[Tuple[re.Pattern, str, str]]] = None
@@ -97,14 +103,105 @@ def load_steno_rules(force_reload: bool = False) -> List[Tuple[re.Pattern, str, 
 
     # 3. Courtroom speech synonyms & variations
     court_synonyms = [
-        ("next paragraph", "\n\n"),
-        ("next line", "\n"),
+        # Spoken bracket variations
+        ("in to the bracket", "("),
+        ("in to the brackets", "("),
+        ("into the bracket", "("),
+        ("into the brackets", "("),
+        ("in to bracket", "("),
+        ("into bracket", "("),
+        ("in the bracket", "("),
+        ("in the brackets", "("),
+        ("open bracket", "("),
+        ("open the bracket", "("),
+        ("bracket open", "("),
+        ("brackets open", "("),
+        ("start bracket", "("),
+        ("bracket closed", ")"),
+        ("brackets closed", ")"),
+        ("bracket close", ")"),
+        ("brackets close", ")"),
+        ("close the bracket", ")"),
+        ("close the brackets", ")"),
+        ("close bracket", ")"),
+        ("close brackets", ")"),
+        ("bracket complete", ")"),
+        ("bracket completed", ")"),
+        ("bracket end", ")"),
+        ("brackets end", ")"),
+        ("out of bracket", ")"),
+        ("out of the bracket", ")"),
+        ("out of brackets", ")"),
+        ("out of the brackets", ")"),
+        
+        # Commas & periods
+        ("commas", ","),
+        ("comma", ","),
+        ("coma", ","),
+        ("koma", ","),
+        ("full stop", "."),
+        ("full stops", "."),
+        ("fullstop", "."),
         ("purna viram", "."),
+        ("period", "."),
+        
+        # Quotes & inverted commas
+        ("in to the quote", '"'),
+        ("into the quote", '"'),
+        ("in to the quotes", '"'),
+        ("into the quotes", '"'),
+        ("in to quotes", '"'),
+        ("into quotes", '"'),
+        ("in quotes", '"'),
+        ("open quote", '"'),
+        ("open quotes", '"'),
+        ("quote open", '"'),
+        ("quotes open", '"'),
+        ("quote closed", '"'),
+        ("quotes closed", '"'),
+        ("close quote", '"'),
+        ("close quotes", '"'),
+        ("open inverted commas", '"'),
+        ("close inverted commas", '"'),
+        ("open inverted comma", '"'),
+        ("close inverted comma", '"'),
+        
+        # Punctuation & math
+        ("colon", ":"),
+        ("colons", ":"),
+        ("semicolon", ";"),
+        ("semicolons", ";"),
+        ("semi colon", ";"),
+        ("semi colons", ";"),
+        ("question mark", "?"),
+        ("question marks", "?"),
+        ("exclamation mark", "!"),
+        ("exclamation point", "!"),
+        ("hyphen", "-"),
+        ("dash", "-"),
+        
+        # Spoken Vernacular (Transliterated)
         ("alpa viram", ","),
+        ("alpaviram", ","),
+        ("swalpa viram", ","),
+        ("swalpaviram", ","),
         ("prashna chinha", "?"),
         ("udgar chinha", "!"),
         ("फुल स्टॉप", "."),
         ("कॉमा", ","),
+        ("स्वल्पविराम", ","),
+        ("अल्पविराम", ","),
+        ("कंसात", "("),
+        ("कंस सुरू", "("),
+        ("कंस पूर्ण", ")"),
+        ("कंस बंद", ")"),
+        
+        # Line & paragraph breaks
+        ("next paragraph", "\n\n"),
+        ("new paragraph", "\n\n"),
+        ("paragraph break", "\n\n"),
+        ("next line", "\n"),
+        ("new line", "\n"),
         ("पुढील परिच्छेद", "\n\n"),
         ("पुढील ओळ", "\n"),
         ("नवा परिच्छेद", "\n\n"),
@@ -187,6 +284,53 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
     for pat, sym, _ in rules:
         processed = pat.sub(lambda m, s=sym: s, processed)
 
+    # Step 2b: Explicit guarantee: Convert any spoken 'comma' / 'commas' command variations into ','
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:commas?|komas?|comas?|alpa\s+viram|alpaviram|swalpa\s+viram|swalpaviram|कॉमा|स्वल्पविराम|अल्पविराम)(?![A-Za-z0-9\u0900-\u097F])",
+        ",",
+        processed,
+        flags=re.IGNORECASE,
+    )
+    # Deduplicate consecutive commas resulting from speech pauses (e.g. ", ,")
+    processed = re.sub(r",\s*,+", ",", processed)
+
+    # Step 2c: Explicit guarantee: Brackets ("in to the bracket", "into bracket", "open bracket" -> "(")
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:in\s*to\s+(?:the\s+)?brackets?|into\s+(?:the\s+)?brackets?|in\s+(?:the\s+)?brackets?|open\s+(?:the\s+)?brackets?|brackets?\s+open|start\s+(?:the\s+)?brackets?|open\s+parenthes(?:is|es)|parenthes(?:is|es)\s+open)(?![A-Za-z0-9\u0900-\u097F])",
+        "(",
+        processed,
+        flags=re.IGNORECASE,
+    )
+    # ("bracket closed", "brackets closed", "bracket close", "close bracket" -> ")")
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:brackets?\s+closed|brackets?\s+close|close\s+(?:the\s+)?brackets?|close\s+brackets?|brackets?\s+complete[d]?|brackets?\s+end|out\s+of\s+(?:the\s+)?brackets?|close\s+parenthes(?:is|es)|parenthes(?:is|es)\s+closed)(?![A-Za-z0-9\u0900-\u097F])",
+        ")",
+        processed,
+        flags=re.IGNORECASE,
+    )
+
+    # Step 2d: Explicit guarantee: Quotes ("in to the quote", "open quote" -> '"', "quote closed", "close quote" -> '"')
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:in\s*to\s+(?:the\s+)?quotes?|into\s+(?:the\s+)?quotes?|open\s+(?:double\s+)?quotes?|quotes?\s+open|open\s+inverted\s+commas?|inverted\s+commas?\s+open)(?![A-Za-z0-9\u0900-\u097F])",
+        '"',
+        processed,
+        flags=re.IGNORECASE,
+    )
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:quotes?\s+closed|quotes?\s+close|close\s+(?:the\s+)?quotes?|close\s+(?:double\s+)?quotes?|out\s+of\s+(?:the\s+)?quotes?|close\s+inverted\s+commas?|inverted\s+commas?\s+closed)(?![A-Za-z0-9\u0900-\u097F])",
+        '"',
+        processed,
+        flags=re.IGNORECASE,
+    )
+
+    # Step 2e: Explicit guarantee: Full stops
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:full\s*stops?|fullstops?)(?![A-Za-z0-9\u0900-\u097F])",
+        ".",
+        processed,
+        flags=re.IGNORECASE,
+    )
+
     # Step 3: Restore conversational phrases
     for placeholder, original in GUARD_RESTORATIONS:
         processed = processed.replace(placeholder, original)
@@ -244,12 +388,14 @@ def transcribe_audio_file(
     apply_commands: bool = True,
     api_key: Optional[str] = None,
     preferred_model: Optional[str] = None,
+    target_model: Optional[str] = None,
+    **kwargs,
 ) -> Dict[str, Any]:
     """
-    Sends recorded audio to OpenAI's speech-to-text API using gpt-live-transcribe.
+    Sends recorded audio to OpenAI's speech-to-text API (whisper-1).
     
     Features:
-        - Uses requested speech model (defaults to gpt-live-transcribe)
+        - Uses requested speech model (defaults to whisper-1)
         - Injects legal terminology prompt context into OpenAI API
         - Applies voice command processing
         - Applies legal vocabulary normalization
@@ -268,13 +414,13 @@ def transcribe_audio_file(
     if client is None:
         return {
             "success": False,
-            "error": "OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file or environment.",
+            "error": "OpenAI API key not configured. Please ensure OPENAI_API_KEY is properly set in your .env file.",
             "raw_text": "",
             "processed_text": "",
             "model_used": None,
         }
 
-    target_model = preferred_model or os.getenv("OPENAI_TRANSCRIPTION_MODEL", DEFAULT_TRANSCRIPTION_MODEL)
+    target_model = preferred_model or target_model or os.getenv("OPENAI_TRANSCRIPTION_MODEL", DEFAULT_TRANSCRIPTION_MODEL) or "whisper-1"
     legal_prompt = get_legal_prompt_context(language_code)
 
     # Prepare file-like object in memory
@@ -302,35 +448,41 @@ def transcribe_audio_file(
         raw_text = response if isinstance(response, str) else getattr(response, "text", str(response))
     except Exception as err:
         err_msg = str(err)
-        # If gpt-live-transcribe returns 404 (endpoint only accepts gpt-transcribe / gpt-4o-transcribe for POST audio)
-        if ("404" in err_msg or "Invalid URL" in err_msg) and target_model == "gpt-live-transcribe":
-            try:
-                audio_buffer.seek(0)
-                params["model"] = "gpt-transcribe"
-                model_used = "gpt-transcribe"
-                routing_note = "gpt-live-transcribe requires WebSockets; processed via gpt-transcribe."
-                response = client.audio.transcriptions.create(**params)
-                raw_text = response if isinstance(response, str) else getattr(response, "text", str(response))
-            except Exception as retry_err:
+        # If model is not recognized or returns 404, fallback to whisper-1
+        if ("404" in err_msg or "Invalid URL" in err_msg or "model_not_found" in err_msg.lower() or "does not exist" in err_msg.lower() or target_model == "gpt-live-transcribe"):
+            for fallback_model in ["whisper-1", "gpt-transcribe"]:
+                if fallback_model == target_model:
+                    continue
+                try:
+                    audio_buffer.seek(0)
+                    params["model"] = fallback_model
+                    model_used = fallback_model
+                    routing_note = f"Processed via {fallback_model}."
+                    response = client.audio.transcriptions.create(**params)
+                    raw_text = response if isinstance(response, str) else getattr(response, "text", str(response))
+                    break
+                except Exception:
+                    continue
+            if not raw_text:
                 return {
                     "success": False,
-                    "error": f"OpenAI API Error: {str(retry_err)}",
+                    "error": f"OpenAI API Error: {err_msg}",
                     "raw_text": "",
                     "processed_text": "",
                     "model_used": model_used,
                 }
-        elif "AuthenticationError" in err_msg or "Invalid API Key" in err_msg:
+        if "401" in err_msg or "invalid" in err_msg.lower() or "authentication" in err_msg.lower():
             return {
                 "success": False,
-                "error": "Invalid OpenAI API Key. Please verify your OPENAI_API_KEY in .env.",
+                "error": "OpenAI API Key is invalid or expired (Error 401). Please check the OPENAI_API_KEY in your .env file, or switch Live Engine to 'Browser Native'.",
                 "raw_text": "",
                 "processed_text": "",
                 "model_used": target_model,
             }
-        elif "RateLimitError" in err_msg or "rate limit" in err_msg.lower():
+        elif "429" in err_msg or "rate limit" in err_msg.lower() or "quota" in err_msg.lower():
             return {
                 "success": False,
-                "error": "OpenAI API rate limit exceeded. Please check your account quota and billing.",
+                "error": "OpenAI API quota / credits exhausted (Error 429). Please check your OpenAI account credits or switch Live Engine to 'Browser Native'.",
                 "raw_text": "",
                 "processed_text": "",
                 "model_used": target_model,

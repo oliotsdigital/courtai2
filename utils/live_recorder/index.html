@@ -353,12 +353,17 @@
           const chunk = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             const processedChunk = applyLiveVoiceAndLegalRules(chunk);
-            if (finalizedText && !finalizedText.endsWith("\n") && !finalizedText.endsWith(" ")) {
-              finalizedText += " " + processedChunk;
-            } else {
-              finalizedText += processedChunk;
+            if (processedChunk) {
+              if (finalizedText && /^[.,;:?!]/.test(processedChunk.trim())) {
+                finalizedText = finalizedText.trimEnd() + processedChunk.trim() + " ";
+              } else if (finalizedText && !finalizedText.endsWith("\n") && !finalizedText.endsWith(" ")) {
+                finalizedText += " " + processedChunk;
+              } else {
+                finalizedText += processedChunk;
+              }
+              finalizedText = finalizedText.replace(/\s+([.,;:?!])/g, "$1").replace(/,([A-Za-z0-9\u0900-\u097F])/g, ", $1");
+              syncToParentIfPossible();
             }
-            syncToParentIfPossible();
           } else {
             interimText += chunk;
           }
@@ -484,7 +489,8 @@
 
       let html = escapeHtml(finalizedText);
       if (interimText) {
-        html += ' <span class="interim-text">' + escapeHtml(interimText) + '</span>';
+        const liveInterim = applyLiveVoiceAndLegalRules(interimText);
+        html += ' <span class="interim-text">' + escapeHtml(liveInterim) + '</span>';
       }
       container.innerHTML = html;
       container.scrollTop = container.scrollHeight;
@@ -573,6 +579,12 @@
       t = t.replace(/§§GUARD_RET§§/g, "return");
       t = t.replace(/§§GUARD_PT§§/g, "point");
       t = t.replace(/§§GUARD_CLN§§/g, "colon");
+
+      // 3b. Guarantee spoken 'comma' command variations convert to ','
+      t = t.replace(/(?<![A-Za-z0-9\u0900-\u097F])(?:comma|koma|alpa\s+viram|alpaviram|swalpa\s+viram|swalpaviram|कॉमा|स्वल्पविराम|अल्पविराम)(?![A-Za-z0-9\u0900-\u097F])/giu, ",");
+      t = t.replace(/,\s*,+/g, ",");
+      t = t.replace(/\s+,/g, ",");
+      t = t.replace(/,([A-Za-z0-9\u0900-\u097F])/g, ", $1");
 
       // 4. Witness & Accused Formatting (from training data english_data_1.txt & english_data_2.txt)
       t = t.replace(/\b(?:P\.?\s*W\.?|Prosecution\s+Witness)\s*[- ]?(\d+)\b/gi, "PW-$1");

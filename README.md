@@ -1,16 +1,18 @@
-# CourtScribe AI — Courtroom Speech-to-Text Demo
+# CourtScribe AI — English Judicial Stenographer Workstation
 
-A professional courtroom transcription workstation built with **Streamlit** and the **OpenAI Speech API**, engineered specifically to demonstrate legal speech-to-text capabilities to judges, advocates, and judicial administrative bodies.
+A professional courtroom transcription workstation built with **Flask** and the **OpenAI Speech API**, engineered specifically for high-accuracy judicial English stenography, legal normalization, and courtroom document preparation.
 
 ---
 
 ## Key Capabilities Demonstrated
 
-1. **Microphone Dictation**: Press to talk, speak naturally in English, Hindi, Marathi, or mixed courtroom code-switching (e.g. Hinglish).
-2. **Accurate Legal Terminology**: Domain vocabulary context injection and safe statutory normalization (e.g. *Section 144*, *CPC*, *CrPC*, *BNS*, *BNSS*, *Learned Counsel*, *Hon'ble Court*).
-3. **Voice-Controlled Dictation Commands**: Translates spoken cues (e.g. *"full stop"*, *"comma"*, *"next paragraph"*, *"new line"*, *"question mark"*) into proper punctuation and paragraph breaks.
-4. **One-Click Legal Document Export**: Export the live edited transcript into structured Microsoft Word (`.docx`) and multi-page court-style PDF (`.pdf`) with running headers and page numbers.
-5. **AI Draft Proceedings Notes**: Structures spoken proceedings into an organized judicial hearing summary (Case Summary, Appearances, Submissions, Orders Mentioned, Next Dates).
+1. **Live Continuous Dictation (Web Speech API)**: Native real-time streaming dictation directly in the browser (Chrome, Edge, Safari) with audio visualization.
+2. **Audio File Transcription (Whisper API)**: Upload courtroom recordings (`.mp3`, `.wav`, `.m4a`, `.webm`, `.ogg`) for high-fidelity legal transcription.
+3. **Spoken Steno Shorthand Translation**: Automatically converts spoken cues (*"comma"* -> `,`, *"full stop"* -> `.`, *"colon"* -> `:`, *"open bracket"* -> `(`, *"next paragraph"*, etc.) into proper punctuation.
+4. **Legal Vocabulary & Witness Normalization**: Formats judicial terms and exhibits matching High Court standards (*PW-1*, *Ex.P1*, *MO-1*, *Section 302 IPC*, *RI 5 years*, *S/o.*).
+5. **Pre-Loaded High Court Presets**: Load actual benchmark judgments (`english_data_1.txt`, `english_data_2.txt`, and Bail Dictation) with a single click.
+6. **AI Judge's Order Draft**: Structures transcripts into an 8-part official judicial order outline.
+7. **One-Click Courtroom Document Export**: Export live transcripts to Microsoft Word (`.docx`) and court-formatted PDF (`.pdf`).
 
 ---
 
@@ -18,14 +20,21 @@ A professional courtroom transcription workstation built with **Streamlit** and 
 
 ```text
 court-stt-demo/
-├── app.py                     # Main Streamlit courtroom workstation application
-├── requirements.txt           # Python dependencies
-├── .env.example               # Environment variables template
-├── .env                       # Local environment configuration (API keys)
-├── README.md                  # Comprehensive documentation & testing guide
+├── app.py                     # Flask web server & REST endpoints (Port 8501)
+├── Dockerfile                 # Production Coolify Docker configuration
+├── requirements.txt           # Python dependencies (Flask, Gunicorn, etc.)
+├── static/
+│   ├── css/style.css          # Judicial navy & gold design system
+│   └── js/app.js              # Client audio streaming, steno engine & controller
+├── templates/
+│   └── index.html             # Main English Judicial Stenographer workstation UI
+├── training/
+│   ├── english_data_1.txt     # Murder Appeal High Court Judgment benchmark
+│   ├── english_data_2.txt     # Sentence Modification Order benchmark
+│   └── steno_english.json     # Spoken command to symbol mappings
 └── utils/
-    ├── transcription.py       # OpenAI transcription, voice commands, and fallback logic
-    ├── legal_vocabulary.py    # Legal lexicon, prompt context, and citation normalizers
+    ├── transcription.py       # OpenAI Whisper audio transcription pipeline
+    ├── legal_vocabulary.py    # English legal lexicon & normalization rules
     └── exporters.py           # Word (.docx) and PDF document generation
 ```
 

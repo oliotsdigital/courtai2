@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CourtScribe AI — English Judicial Stenographer & Courtroom Speech-to-Text</title>
+  <meta name="description" content="Official English Judicial Stenographer workstation. Real-time streaming speech-to-text, automated steno command shorthand replacement, legal term normalization, and judge's order draft generation.">
+
+  <!-- Fonts: Google Fonts Inter, Cinzel & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Core Judicial Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <!-- Header & Judicial Brand Bar -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="court-seal" title="Judicial Seal of Authenticity">⚖️</div>
+        <div class="brand-titles">
+          <h1>CourtScribe AI <span class="badge-court">COURT STENO</span></h1>
+          <p class="brand-subtitle">Judicial Speech-to-Text & Stenographer Workstation • High Court & Trial Court Standards</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- English-Only Language Selector Pill -->
+        <div class="lang-selector-pill" title="Speech Recognition Language (English Only)">
+          <span>🌐</span>
+          <label for="languageSelect" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-right: 4px;">Language:</label>
+          <select id="languageSelect">
+            <option value="en-IN" selected>English (India / High Court)</option>
+            <option value="en-US">English (US Legal)</option>
+            <option value="en-GB">English (UK / Common Law)</option>
+          </select>
+        </div>
+
+        <!-- Live STT Engine Selector (OpenAI Realtime vs Browser) -->
+        <div class="lang-selector-pill" title="Live Speech-to-Text Engine">
+          <span>⚡</span>
+          <label for="engineSelect" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-right: 4px;">Live Engine:</label>
+          <select id="engineSelect">
+            <option value="openai" selected>OpenAI Realtime (Low-Latency WebSocket)</option>
+            <option value="browser">Browser Native (Offline)</option>
+          </select>
+        </div>
+
+        <!-- Light / Dark Mode Toggle Button (Default: Light Mode) -->
+        <button id="btnThemeToggle" class="theme-toggle-btn" title="Toggle Light / Dark Mode">
+          <span id="themeToggleIcon">☀️</span>
+          <span id="themeToggleText">Light Mode</span>
+        </button>
+
+        <!-- Connection / Live Engine Status -->
+        <div id="liveEngineStatus" class="status-badge">
+          <span class="pulse-dot"></span>
+          <span id="engineStatusText">OpenAI Whisper Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Two-Column Layout -->
+    <main class="main-content-grid">
+      
+      <!-- LEFT COLUMN: Dictation & Editor -->
+      <section class="left-column">
+
+        <!-- 1. Live Streaming Dictation Card -->
+        <div class="card-glass" id="liveDictationCard">
+          <div class="card-header">
+            <div>
+              <h2>🎙️ Live Stenographer Dictation</h2>
+              <p class="card-subtitle">Real-time continuous audio streaming with automatic spoken punctuation shorthand translation</p>
+            </div>
+            <span id="micStateBadge" class="status-badge" style="background: rgba(37,99,235,0.15); color: #60a5fa; border-color: rgba(37,99,235,0.3);">
+              Standby
+            </span>
+          </div>
+
+          <!-- Live Streaming Box (Shows interim & finalized words in real-time) -->
+          <div id="liveStreamBox" class="live-stream-box" tabindex="0" title="Live speech dictation buffer">
+            <span class="empty-stream-prompt" id="liveStreamPlaceholder">Click "Start Dictation" and begin speaking. Spoken commands like "comma", "full stop", "next line" will be instantly converted into symbols...</span>
+            <span id="finalTranscriptBuffer"></span>
+            <span id="interimTranscriptBuffer" class="interim-preview"></span>
+            <div id="openaiLiveIndicator" class="spinner-indicator" style="display: none; margin-top: 6px;">
+              <span>⚡</span> Transcribing live audio chunk via OpenAI Whisper...
+            </div>
+          </div>
+
+          <!-- Audio Wave Visualizer -->
+          <div class="audio-visualizer-container" id="audioVisualizer" title="Microphone Input Visualizer">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+
+          <!-- Dictation Controls Row -->
+          <div class="dictation-controls">
+            <button id="btnStartLive" class="btn btn-primary" title="Start live dictation with browser speech recognition">
+              <span>▶️</span> Start Dictation
+            </button>
+            <button id="btnStopLive" class="btn btn-secondary" disabled title="Stop live recording">
+              <span>⏹️</span> Stop
+            </button>
+            <button id="btnAppendLive" class="btn btn-gold" title="Append live transcript buffer into the main courtroom editor below">
+              <span>⬇️</span> Append to Editor
+            </button>
+            <button id="btnClearLive" class="btn btn-secondary btn-sm" title="Clear current live dictation buffer">
+              <span>🧹</span> Clear Live
+            </button>
+          </div>
+
+          <!-- Steno Shorthand Reminder Banner -->
+          <div class="steno-hints-bar">
+            <span>💡 <strong>Spoken Shorthand Active:</strong> Say <em>"comma"</em> (,), <em>"full stop"</em> (.), <em>"colon"</em> (:), <em>"open bracket"</em> ((), <em>"close bracket"</em> ()), <em>"next line"</em> (↵), <em>"next paragraph"</em>.</span>
+          </div>
+        </div>
+
+        <!-- 2. Main Courtroom Transcript Editor Card -->
+        <div class="card-glass">
+          <div class="card-header">
+            <div>
+              <h2>📝 Courtroom Transcript Editor</h2>
+              <p class="card-subtitle">Official verified text record • Supports full manual editing and judicial term formatting</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="btnCopyEditor" class="btn btn-secondary btn-sm" title="Copy transcript to clipboard">
+                <span>📋</span> Copy
+              </button>
+              <button id="btnClearEditor" class="btn btn-danger btn-sm" title="Clear transcript editor">
+                <span>🗑️</span> Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Editor Textarea -->
+          <div class="editor-container">
+            <textarea id="transcriptTextarea" class="transcript-textarea" spellcheck="true" placeholder="Courtroom transcript will appear here. You can dictate live above, upload an audio file on the right, or load a judicial benchmark sample..."></textarea>
+          </div>
+
+          <!-- Footer Stats -->
+          <div class="editor-footer-bar">
+            <div class="editor-stats">
+              <span id="statWords">0 words</span>
+              <span>•</span>
+              <span id="statChars">0 characters</span>
+              <span>•</span>
+              <span id="statParagraphs">0 paragraphs</span>
+            </div>
+            <span style="color: var(--text-gold); font-size: 11px;">⚖️ English Judicial Standards</span>
+          </div>
+
+          <!-- Action Buttons Bar -->
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;">
+            <button id="btnNormalize" class="btn btn-gold" style="flex: 1; min-width: 220px;" title="Convert spoken commands ('comma' -> ',') and normalize legal terms (PW-1, Ex.P1, MO-1, IPC Sections)">
+              <span>✨</span> Apply Steno & Legal Formatting
+            </button>
+            <button id="btnGenerateDraft" class="btn btn-primary" style="flex: 1; min-width: 220px;" title="Structure transcript into 8-part official Judge's Order and Court Proceedings draft">
+              <span>⚡</span> Generate Judge's Order Draft
+            </button>
+          </div>
+
+          <!-- Document Export Actions -->
+          <div style="display: flex; gap: 10px; margin-top: 12px;">
+            <button id="btnExportDocx" class="btn btn-secondary" style="flex: 1;" title="Download official Microsoft Word document (.docx)">
+              <span>📄</span> Export to Word (.docx)
+            </button>
+            <button id="btnExportPdf" class="btn btn-secondary" style="flex: 1;" title="Download court-formatted PDF">
+              <span>📕</span> Export to PDF
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- RIGHT COLUMN: Audio Upload, Samples & Draft Panel -->
+      <aside class="right-column">
+
+        <!-- 1. Audio File & Direct Recording Transcription Card -->
+        <div class="card-glass">
+          <div class="card-header">
+            <div>
+              <h2>📁 Audio File Transcription</h2>
+              <p class="card-subtitle">Transcribe courtroom recordings (.mp3, .wav, .m4a, .webm, .ogg)</p>
+            </div>
+            <span class="status-badge" style="background: rgba(16,185,129,0.1); color: #34d399; border-color: rgba(16,185,129,0.3);">
+              Whisper Audio API
+            </span>
+          </div>
+
+          <!-- Upload Dropzone -->
+          <div class="upload-dropzone" id="uploadDropzone">
+            <input type="file" id="audioFileInput" accept="audio/*,.mp3,.wav,.m4a,.webm,.ogg,.aac">
+            <div class="upload-icon">🎙️</div>
+            <div class="upload-title">Drop courtroom audio here or click to browse</div>
+            <div class="upload-subtitle">Supported formats: MP3, WAV, M4A, WEBM, OGG (Max 64MB)</div>
+          </div>
+
+          <!-- Selected File Details -->
+          <div id="selectedFileInfo" class="selected-file-info" style="display: none;">
+            <div>
+              <strong id="selectedFileName" style="color: var(--text-main);">file.mp3</strong>
+              <span id="selectedFileSize" style="color: var(--text-muted); margin-left: 8px;">(0 MB)</span>
+            </div>
+            <button id="btnRemoveFile" class="btn btn-secondary btn-sm" style="padding: 2px 8px;">✕</button>
+          </div>
+
+          <!-- Audio File Transcribe Button -->
+          <div style="margin-top: 14px;">
+            <button id="btnTranscribeFile" class="btn btn-primary btn-block" disabled title="Send audio to transcription pipeline">
+              <span>⚡</span> Transcribe Audio File
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Judicial Benchmark Samples Card (English Only) -->
+        <div class="card-glass">
+          <div class="card-header">
+            <div>
+              <h2>📚 Judicial Presets (English Only)</h2>
+              <p class="card-subtitle">Load actual High Court judgments to test stenography & legal normalization</p>
+            </div>
+          </div>
+
+          <div class="sample-presets-grid">
+            <!-- Data 1 Preset -->
+            <div class="preset-card" data-sample-id="data1" title="Load Murder Appeal Judgment with PW-1, Ex.P1, MO-1, Section 302/34">
+              <h4>🏛️ Murder Appeal (Data 1)</h4>
+              <p>PW-1 to PW-10, Ex.P1 to Ex.P21, MO-1 bullock-cart peg, FSL report, Section 302/34 IPC acquittal.</p>
+            </div>
+
+            <!-- Data 2 Preset -->
+            <div class="preset-card" data-sample-id="data2" title="Load Sentencing Modification Order with Scissors, RI, Compromise Deed">
+              <h4>⚖️ Sentence Appeal (Data 2)</h4>
+              <p>Tailoring scissors weapon, RI 5 years, Section 307 vs 326 IPC, compromise deed, period undergone.</p>
+            </div>
+
+            <!-- Oral Dictation Preset -->
+            <div class="preset-card" data-sample-id="dictation" title="Load Bail Application Dictation in Open Court">
+              <h4>🎙️ Bail Dictation</h4>
+              <p>Judge's oral dictation: Section 439 CrPC interim bail, ₹ 25,000 surety bond, passport surrender.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Judge's Order Draft Structure Panel -->
+        <div class="card-glass">
+          <div class="card-header">
+            <div>
+              <h2>📜 Judge's Order Draft</h2>
+              <p class="card-subtitle">Generated 8-part official court proceedings structure</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="btnCopyDraft" class="btn btn-secondary btn-sm" title="Copy draft to clipboard">
+                <span>📋</span> Copy
+              </button>
+              <button id="btnInsertDraft" class="btn btn-gold btn-sm" title="Insert this structured draft into the main editor">
+                <span>↩️</span> Send to Editor
+              </button>
+            </div>
+          </div>
+
+          <div id="draftPanel" class="draft-panel" tabindex="0"></div>
+        </div>
+
+        <!-- 4. Quick Stenographer Shorthand Guide -->
+        <div class="card-glass">
+          <div class="card-header">
+            <div>
+              <h2>📖 English Shorthand Commands</h2>
+              <p class="card-subtitle">Spoken command translation reference</p>
+            </div>
+          </div>
+
+          <div class="steno-table-box">
+            <table class="steno-table">
+              <thead>
+                <tr>
+                  <th>Spoken Words</th>
+                  <th>Symbol / Format</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>in to the bracket</code> / <code>open bracket</code></td>
+                  <td><span class="symbol-pill">(</span></td>
+                </tr>
+                <tr>
+                  <td><code>bracket closed</code> / <code>close bracket</code></td>
+                  <td><span class="symbol-pill">)</span></td>
+                </tr>
+                <tr>
+                  <td><code>commas</code> / <code>comma</code></td>
+                  <td><span class="symbol-pill">,</span></td>
+                </tr>
+                <tr>
+                  <td><code>full stop</code> / <code>period</code></td>
+                  <td><span class="symbol-pill">.</span></td>
+                </tr>
+                <tr>
+                  <td><code>colon</code> / <code>semicolon</code></td>
+                  <td><span class="symbol-pill">:</span> / <span class="symbol-pill">;</span></td>
+                </tr>
+                <tr>
+                  <td><code>in to quotes</code> / <code>quotes closed</code></td>
+                  <td><span class="symbol-pill">“</span> / <span class="symbol-pill">”</span></td>
+                </tr>
+                <tr>
+                  <td><code>question mark</code> / <code>hyphen</code></td>
+                  <td><span class="symbol-pill">?</span> / <span class="symbol-pill">-</span></td>
+                </tr>
+                <tr>
+                  <td><code>new line</code> / <code>next paragraph</code></td>
+                  <td><span class="symbol-pill">↵ Enter</span> / <span class="symbol-pill">↵↵ Para</span></td>
+                </tr>
+                <tr>
+                  <td><code>prosecution witness 1</code></td>
+                  <td><span class="symbol-pill">PW-1</span></td>
+                </tr>
+                <tr>
+                  <td><code>exhibit p 1</code></td>
+                  <td><span class="symbol-pill">Ex.P1</span></td>
+                </tr>
+                <tr>
+                  <td><code>material object 1</code></td>
+                  <td><span class="symbol-pill">MO-1</span></td>
+                </tr>
+                <tr>
+                  <td><code>section 302</code></td>
+                  <td><span class="symbol-pill">Section 302 IPC</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </aside>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>CourtScribe AI</strong> • English Judicial Stenographer Edition • High Court Standards
+      </div>
+      <div>
+        Running on Port <strong>8501</strong> • Connected to Local Flask Backend
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification Hub -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Socket.IO Client Library -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <!-- Client JavaScript Application Controller -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
