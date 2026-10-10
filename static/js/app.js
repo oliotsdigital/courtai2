@@ -1156,6 +1156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     courtTabPanes.forEach((pane) => {
       const isTarget = pane.id === targetTabId;
       pane.classList.toggle("active", isTarget);
+      pane.style.display = isTarget ? "block" : "none";
     });
 
     // If switching to live tab, auto-scroll to bottom of chat

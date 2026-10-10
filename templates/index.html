@@ -89,14 +89,11 @@
       <section id="tab-live" class="tab-pane active" role="tabpanel" aria-labelledby="tabBtnLive">
         <div class="card-glass chat-dictation-window" id="liveDictationCard">
           
-          <!-- Chat Window Header -->
+          <!-- Chat Window Header: Sleek, compact status bar -->
           <div class="chat-window-header">
             <div class="chat-header-title-group">
               <span class="chat-status-indicator"></span>
-              <div>
-                <h2>🎙️ Live Stenographer Dictation Console</h2>
-                <p class="card-subtitle">Real-time continuous speech-to-text with spoken punctuation and legal shorthand translation</p>
-              </div>
+              <h2>🎙️ Live Stenographer Dictation</h2>
             </div>
 
             <div class="chat-header-meta">
@@ -106,32 +103,19 @@
               <span id="liveWordCountPill" class="dock-stats-pill">
                 <span>📝</span> <span id="liveWordCount">0 words</span>
               </span>
-              <div class="steno-hints-bar-mini" title="Say 'comma', 'full stop', 'next line', 'S/o.', 'PW-1'">
-                💡 <span>Shorthand Active</span>
-              </div>
             </div>
           </div>
 
-          <!-- Chat Window Viewport (Covers the Screen with Smooth Auto-Scroll) -->
+          <!-- Chat Window Viewport: Clean Pure Transcription Only -->
           <div class="chat-transcription-viewport">
             <div id="liveStreamBox" class="live-stream-box chat-stream-canvas" tabindex="0" title="Live speech dictation record">
-              
-              <div class="chat-welcome-card" id="liveStreamPlaceholder">
-                <div class="chat-welcome-icon">⚖️</div>
-                <h3>Official Court Stenographer Console Ready</h3>
-                <p>Click <strong>Start Dictation</strong> on the bottom bar to begin recording. Speak at your natural pace.</p>
-                <div class="chat-quick-hints">
-                  <span><strong>Spoken Punctuation:</strong> <em>"comma"</em> (,) • <em>"full stop"</em> (.) • <em>"colon"</em> (:) • <em>"open bracket"</em> (()) • <em>"new line"</em> (↵) • <em>"next paragraph"</em></span>
-                  <span><strong>Court Terms:</strong> <em>"son of"</em> (S/o.) • <em>"accused 3 to 5"</em> (Accused Nos. 3 to 5) • <em>"PW 1"</em> (PW-1) • <em>"two views theory"</em> • <em>"leave granted"</em></span>
-                </div>
-              </div>
-
-              <!-- Real-time Text Streams -->
+              <span id="liveStreamPlaceholder" style="display: none;"></span>
+              <!-- Real-time Text Streams (Only Transcription Here) -->
               <div id="finalTranscriptBuffer" class="chat-final-text"></div>
               <div id="interimTranscriptBuffer" class="chat-interim-text interim-preview"></div>
               
               <div id="openaiLiveIndicator" class="spinner-indicator" style="display: none; margin-top: 10px;">
-                <span>⚡</span> Transcribing live audio chunk via OpenAI Whisper...
+                <span>⚡</span> Transcribing live audio...
               </div>
             </div>
           </div>
@@ -142,10 +126,10 @@
             <!-- Left: Primary Recording Toggle Buttons -->
             <div class="dock-group-left">
               <button id="btnStartLive" class="btn btn-primary btn-dock" title="Start live dictation with browser speech recognition">
-                <span>▶️</span> Start Dictation
+                <span>▶️</span> <span class="btn-text-label">Start Dictation</span>
               </button>
               <button id="btnStopLive" class="btn btn-danger btn-dock" disabled title="Stop live recording">
-                <span>⏹️</span> Stop Recording
+                <span>⏹️</span> <span class="btn-text-label">Stop</span>
               </button>
             </div>
 
@@ -167,13 +151,13 @@
             <!-- Right: Action & Transfer Buttons -->
             <div class="dock-group-right">
               <button id="btnAppendLive" class="btn btn-gold btn-dock" title="Transfer live transcript buffer into Courtroom Editor tab">
-                <span>⬇️</span> Send to Editor
+                <span>⬇️</span> <span class="btn-text-label">To Editor</span>
               </button>
               <button id="btnCopyLive" class="btn btn-secondary btn-dock" title="Copy live dictation to clipboard">
-                <span>📋</span> Copy
+                <span>📋</span> <span class="btn-text-label">Copy</span>
               </button>
               <button id="btnClearLive" class="btn btn-secondary btn-dock btn-sm" title="Clear current live dictation buffer">
-                <span>🧹</span> Clear
+                <span>🧹</span> <span class="btn-text-label">Clear</span>
               </button>
             </div>
 
@@ -183,7 +167,7 @@
       </section>
 
       <!-- TAB 2: Courtroom Editor & Order Draft (Editor & Generated Draft) -->
-      <section id="tab-editor" class="tab-pane" role="tabpanel" aria-labelledby="tabBtnEditor" style="display: none;">
+      <section id="tab-editor" class="tab-pane" role="tabpanel" aria-labelledby="tabBtnEditor">
         <div class="main-content-grid">
           
           <!-- LEFT COLUMN: Main Courtroom Transcript Editor -->
@@ -265,7 +249,7 @@
       </section>
 
       <!-- TAB 3: Audio File Transcription & Reference -->
-      <section id="tab-audio" class="tab-pane" role="tabpanel" aria-labelledby="tabBtnAudio" style="display: none;">
+      <section id="tab-audio" class="tab-pane" role="tabpanel" aria-labelledby="tabBtnAudio">
         <div class="main-content-grid">
           
           <!-- LEFT COLUMN: Audio File Transcription -->
