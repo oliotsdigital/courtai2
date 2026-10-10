@@ -33,7 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnStartLive = document.getElementById("btnStartLive");
   const btnStopLive = document.getElementById("btnStopLive");
   const btnAppendLive = document.getElementById("btnAppendLive");
+  const btnCopyLive = document.getElementById("btnCopyLive");
   const btnClearLive = document.getElementById("btnClearLive");
+  const liveWordCount = document.getElementById("liveWordCount");
 
   const transcriptTextarea = document.getElementById("transcriptTextarea");
   const statWords = document.getElementById("statWords");
@@ -87,6 +89,23 @@ document.addEventListener("DOMContentLoaded", () => {
   try { localStorage.removeItem("courtscribe_openai_key"); } catch (e) {}
 
   // ==========================================
+  // Live Viewport Scroll & Stats Helpers
+  // ==========================================
+  function scrollLiveStreamToBottom() {
+    if (liveStreamBox) {
+      liveStreamBox.scrollTop = liveStreamBox.scrollHeight;
+    }
+  }
+
+  function updateLiveStats() {
+    if (liveWordCount) {
+      const fullText = (finalSpeechText + " " + (interimTranscriptBuffer ? interimTranscriptBuffer.textContent : "")).trim();
+      const count = fullText ? fullText.split(/\s+/).filter(Boolean).length : 0;
+      liveWordCount.textContent = `${count} word${count === 1 ? "" : "s"}`;
+    }
+  }
+
+  // ==========================================
   // Socket.IO Dual-WebSocket Controller
   // ==========================================
   if (typeof io !== "undefined") {
@@ -120,8 +139,9 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("transcript_update", (data) => {
       // Live interim token stream with instant spoken steno replacements
       if (data && data.buffer) {
-        interimSpeechBuffer.textContent = data.buffer;
-        liveStreamBox.scrollTop = liveStreamBox.scrollHeight;
+        interimTranscriptBuffer.textContent = data.buffer;
+        scrollLiveStreamToBottom();
+        updateLiveStats();
       }
     });
 
@@ -131,8 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const text = data.text;
         finalSpeechText = appendToTranscript(finalSpeechText, text);
         finalTranscriptBuffer.textContent = finalSpeechText;
-        interimSpeechBuffer.textContent = "";
-        liveStreamBox.scrollTop = liveStreamBox.scrollHeight;
+        interimTranscriptBuffer.textContent = "";
+        scrollLiveStreamToBottom();
+        updateLiveStats();
 
         // Synchronize directly into main judicial editor
         transcriptTextarea.value = appendToTranscript(transcriptTextarea.value, text);
@@ -649,7 +670,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       finalTranscriptBuffer.textContent = finalSpeechText;
       interimTranscriptBuffer.textContent = interim ? " " + interim : "";
-      liveStreamBox.scrollTop = liveStreamBox.scrollHeight;
+      scrollLiveStreamToBottom();
+      updateLiveStats();
     };
 
     webSpeechRecognition.onerror = (event) => {
@@ -707,6 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audioVisualizer.classList.remove("listening");
     liveDictationCard.classList.remove("listening");
     interimTranscriptBuffer.textContent = "";
+    updateLiveStats();
 
     if (!finalSpeechText.trim()) {
       liveStreamPlaceholder.style.display = "inline";
@@ -737,10 +760,27 @@ document.addEventListener("DOMContentLoaded", () => {
   btnStartLive.addEventListener("click", startLiveDictation);
   btnStopLive.addEventListener("click", stopLiveDictation);
 
+  if (btnCopyLive) {
+    btnCopyLive.addEventListener("click", async () => {
+      const fullText = (finalSpeechText + " " + (interimTranscriptBuffer ? interimTranscriptBuffer.textContent : "")).trim();
+      if (!fullText) {
+        showToast("Live dictation buffer is empty.", "error", 2000);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(fullText);
+        showToast("Live transcription copied to clipboard!", "success", 2000);
+      } catch (err) {
+        showToast("Failed to copy live transcription.", "error", 2000);
+      }
+    });
+  }
+
   btnClearLive.addEventListener("click", () => {
     finalSpeechText = "";
     finalTranscriptBuffer.textContent = "";
     interimTranscriptBuffer.textContent = "";
+    updateLiveStats();
     if (!isListening) {
       liveStreamPlaceholder.style.display = "inline";
     }
@@ -762,6 +802,7 @@ document.addEventListener("DOMContentLoaded", () => {
     finalSpeechText = "";
     finalTranscriptBuffer.textContent = "";
     interimTranscriptBuffer.textContent = "";
+    updateLiveStats();
     if (!isListening) {
       liveStreamPlaceholder.style.display = "inline";
     }
@@ -1050,6 +1091,9 @@ document.addEventListener("DOMContentLoaded", () => {
         transcriptTextarea.value = currentText ? currentText + "\n\n" + data.text : data.text;
         updateEditorStats();
         showToast("Audio transcription completed successfully!", "success", 4000);
+        
+        // Auto-switch to Courtroom Editor tab to show the transcript
+        switchTab("tab-editor");
         transcriptTextarea.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         showToast(data.error || "Failed to transcribe audio file.", "error", 4500);
@@ -1077,6 +1121,9 @@ document.addEventListener("DOMContentLoaded", () => {
           transcriptTextarea.value = data.text;
           updateEditorStats();
           showToast(`Loaded: ${data.title}`, "success", 3000);
+
+          // Auto-switch to Courtroom Editor tab to show the loaded preset
+          switchTab("tab-editor");
           transcriptTextarea.scrollIntoView({ behavior: "smooth", block: "center" });
         } else {
           showToast("Failed to load preset sample.", "error", 2500);
@@ -1088,6 +1135,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // ==========================================
+  // Tab Navigation Controller
+  // Tab 1: Live Stenographer Dictation (Default)
+  // Tab 2: Courtroom Editor & Order Draft
+  // Tab 3: Audio Transcription & Reference
+  // ==========================================
+  const courtTabButtons = document.querySelectorAll(".court-tab-btn");
+  const courtTabPanes = document.querySelectorAll(".tab-pane");
+
+  function switchTab(targetTabId) {
+    if (!targetTabId) return;
+
+    courtTabButtons.forEach((btn) => {
+      const isTarget = btn.dataset.tab === targetTabId;
+      btn.classList.toggle("active", isTarget);
+      btn.setAttribute("aria-selected", isTarget ? "true" : "false");
+    });
+
+    courtTabPanes.forEach((pane) => {
+      const isTarget = pane.id === targetTabId;
+      pane.classList.toggle("active", isTarget);
+    });
+
+    // If switching to live tab, auto-scroll to bottom of chat
+    if (targetTabId === "tab-live") {
+      setTimeout(scrollLiveStreamToBottom, 50);
+    }
+  }
+
+  courtTabButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const targetTabId = btn.dataset.tab;
+      if (targetTabId) {
+        switchTab(targetTabId);
+      }
+    });
+  });
+
+  // Ensure Tab 1 (Live Stenographer Dictation) is active and selected by default
+  switchTab("tab-live");
+
   // Initial stats call
   updateEditorStats();
+  updateLiveStats();
 });
