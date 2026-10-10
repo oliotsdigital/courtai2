@@ -243,8 +243,22 @@ def load_steno_rules(force_reload: bool = False) -> List[Tuple[re.Pattern, str, 
         ("अगला पैराग्राफ", "\n\n"),
         ("नई लाइन", "\n"),
         ("अगली लाइन", "\n"),
-        ("उद्धरण चिन्ह", '"'),
         ("विस्मयादिबोधक चिन्ह", "!"),
+        
+        # Kinship, Residency, Parties & Exhibits
+        ("son of", "S/o. "),
+        ("daughter of", "D/o. "),
+        ("wife of", "W/o. "),
+        ("husband of", "H/o. "),
+        ("widow of", "Wd/o. "),
+        ("care of", "C/o. "),
+        ("resident of", "R/o. "),
+        ("residing at", "R/o. "),
+        ("residing in", "R/o. "),
+        ("resident at", "R/o. "),
+        ("father of", "F/o. "),
+        ("mother of", "M/o. "),
+        ("also known as", "alias"),
     ]
     for cmd, sym in court_synonyms:
         raw_rules.append((cmd, sym))
@@ -391,6 +405,22 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
     # Standalone 'space' after punctuation mark
     processed = re.sub(r"(?<=[.,;:?!])\s*space(?![A-Za-z0-9\u0900-\u097F])", " ", processed, flags=re.IGNORECASE)
 
+    # Step 2i: Explicit guarantee: Kinship & Residency shorthand ("son of" -> "S/o. ", etc.)
+    kinship_terms = [
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:son\s+of|s\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "S/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:daughter\s+of|d\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "D/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:wife\s+of|w\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "W/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:husband\s+of|h\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "H/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:widow\s+of|wd\s*[/.]\s*o\.?|w\s*/\s*d\s*/\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "Wd/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:care\s+of|c\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "C/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:resident\s+of|residing\s+at|residing\s+in|resident\s+at|r\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "R/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:father\s+of|f\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "F/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:mother\s+of|m\s*[/.]\s*o\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "M/o. "),
+        (re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])(?:also\s+known\s+as|a\.?\s*k\.?\s*a\.?)(?![A-Za-z0-9\u0900-\u097F])", re.IGNORECASE), "alias"),
+    ]
+    for pat, rep in kinship_terms:
+        processed = pat.sub(rep, processed)
+
     # Step 3: Restore conversational phrases
     for placeholder, original in GUARD_RESTORATIONS:
         processed = processed.replace(placeholder, original)
@@ -426,6 +456,14 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
     processed = re.sub(r"^(\s*)([a-z])", capitalize_match, processed)
     processed = re.sub(r"([.?!]\s+)([a-z])", capitalize_match, processed)
     processed = re.sub(r"(\n+)([a-z])", capitalize_match, processed)
+
+    # 4h. Re-tighten legal kinship, witness, and party abbreviations
+    processed = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)\s*/\s*o\.\s*(?=[A-Za-z0-9])", r"\1/o. ", processed)
+    processed = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)\s*/\s*o\.\s*$", r"\1/o.", processed)
+    processed = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)\s*/\s*o\.\s*,\s*", r"\1/o., ", processed)
+    processed = re.sub(r"\b(PW|DW|CW|MO)-\s*(\d+)\b", r"\1-\2", processed)
+    processed = re.sub(r"\b(Accused|Appellant|Respondent|Petitioner|Plaintiff|Defendant)\s+Nos?\.\s+(\d+)\s+(?:to|-)\s+(?:\1\s+Nos?\.\s+)?(\d+)\b", r"\1 Nos. \2 to \3", processed, flags=re.IGNORECASE)
+    processed = re.sub(r"\b(Accused|Appellant|Respondent|Petitioner|Plaintiff|Defendant)\s+No\.\s+(\d+)\b", r"\1 No. \2", processed, flags=re.IGNORECASE)
 
     # If the output consists purely of whitespace/breaks, preserve intentional break symbol
     if re.fullmatch(r"[\r\n\t ]*", processed):
@@ -605,27 +643,34 @@ def generate_draft_proceedings(transcript: str, api_key: Optional[str] = None) -
 
     client = get_openai_client(api_key)
     
-    prompt = f"""You are an official Court Stenographer typing the Hon'ble Judge's dictated court order and proceedings.
-Create a structured 'JUDGE'S DICTATION / COURT PROCEEDINGS — DRAFT' based ONLY on the following official spoken transcript.
+    prompt = f"""You are an official Judicial Stenographer typing the Hon'ble Judge's dictated judgment and court proceedings.
+Create a structured 'JUDGE'S DICTATION & JUDGMENT PROCEEDINGS — DRAFT' based ONLY on the following official spoken transcript, adhering to Supreme Court and High Court Indian English judgment standards.
 
 CRITICAL INSTRUCTIONS:
 1. Do NOT invent or assume any facts, dates, names, or statutes not present in the transcript.
-2. If a section has no details in the transcript, write 'Not specified in proceedings'.
-3. Maintain language fidelity: The transcript and proceedings are strictly in Indian English. Preserve all citations, sections, and legal terminology verbatim.
-4. Label clearly: 'Official Stenographer Draft — requires signature/review by the Hon'ble Presiding Judge.'
-5. Adhere strictly to this exact outline:
+2. If a section has no details in the transcript, write 'Not specified in dictation'.
+3. Maintain language fidelity: The transcript and proceedings are strictly in Indian English. Preserve all citations, sections, and legal terminology verbatim (e.g., S/o., PWs, Ex.Ps, MOs, A1 to A8, Sections of IPC/CrPC).
+4. Label clearly: '[Official Judicial Stenographer Draft — requires signature and review by the Hon'ble Presiding Judge.]'
+5. Adhere strictly to this exact 8-part judicial judgment outline:
 
-JUDGE'S DICTATION & COURT PROCEEDINGS — DRAFT
----------------------------------------------
-[Official Stenographer Draft — requires review by the Hon'ble Presiding Judge]
+JUDGE'S DICTATION & JUDGMENT PROCEEDINGS — DRAFT
+------------------------------------------------
+[Official Judicial Stenographer Draft — requires review by the Hon'ble Presiding Judge]
 
-1. Order / Case Summary
-2. Coram & Appearances (Hon'ble Judge, Counsel for Parties)
-3. Submissions Recorded
-4. Evidence / Exhibits / Affidavits Cited
-5. Findings & Observations of the Bench
-6. Operative Order / Directions Issued
-7. Next Hearing Date & Compliance Schedule
+1. Cause Title, Jurisdiction & Coram
+   - Jurisdiction, Case / Appeal Number, Parties (Appellants / Petitioners v. Respondents / State), Coram (Hon'ble Judges)
+2. Procedural History & Impugned Order
+   - Trial Court / High Court decisions appealed from, leave status
+3. Prosecution Case & Accused Overt Acts
+   - FIR details, Police Station, alleged incident, roles attributed to Accused (A1 to An)
+4. Investigation & Evidence Record
+   - Witnesses examined (PWs), Exhibits marked (Ex.Ps, Ex.Ds), Material Objects (MOs), Medical / Post-Mortem & Forensic findings
+5. Rival Submissions of Learned Counsel
+   - Contentions on behalf of Appellants / Accused and Public Prosecutor / State
+6. Findings of the Bench & Legal Principles
+   - Appreciation of evidence, Presumption of Innocence, Two-Views Theory, Panchsheel of circumstantial evidence / creditworthiness
+7. Operative Order & Dictation Directions
+   - Conviction / Acquittal, setting aside / restoration, bail / custody release directions
 8. Verbatim Key Dictation Excerpt
 
 TRANSCRIPT:
@@ -637,7 +682,7 @@ TRANSCRIPT:
             completion = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a precise Judicial Stenographer adhering strictly to the Judge's spoken Indian English record. You transcribe courtroom English verbatim."},
+                    {"role": "system", "content": "You are a precise Judicial Stenographer adhering strictly to the Judge's spoken Indian English record. You transcribe courtroom English verbatim into structured judicial judgment notes."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.2,
@@ -649,34 +694,34 @@ TRANSCRIPT:
 
     # Deterministic local structuring fallback
     lines = [line.strip() for line in transcript.split("\n") if line.strip()]
-    summary_excerpt = lines[0] if lines else "Courtroom proceedings recorded."
+    summary_excerpt = lines[0] if lines else "Courtroom dictation recorded."
     
-    return f"""COURT PROCEEDINGS — DRAFT
--------------------------
-[Disclaimer: AI-generated draft — requires review by the presiding authority/legal professional.]
+    return f"""JUDGE'S DICTATION & JUDGMENT PROCEEDINGS — DRAFT
+------------------------------------------------
+[Official Judicial Stenographer Draft — requires review by the Hon'ble Presiding Judge]
 
-1. Case Summary
-   {summary_excerpt}
+1. Cause Title, Jurisdiction & Coram
+   - {summary_excerpt}
+   - Coram: Hon'ble Presiding Judge(s)
 
-2. Appearances
-   - Applicant / Learned Counsel: Refer to recorded submissions.
-   - Respondent: Refer to recorded submissions.
+2. Procedural History & Impugned Order
+   - Appeal / Proceedings arising out of lower court orders referenced in dictation.
 
-3. Submissions
-   - Recorded submissions made during the hearing as noted in transcript below.
+3. Prosecution Case & Accused Overt Acts
+   - Summary of allegations, police station, and overt acts attributed to Accused.
 
-4. Evidence / Statements
-   - Pleadings, affidavits, and exhibits referenced during proceedings.
+4. Investigation & Evidence Record
+   - Witness testimonies (PWs), Exhibits marked (Ex.Ps), and Material Objects (MOs) on record.
 
-5. Issues Discussed
-   - Matters arising from current applications and statutory provisions cited.
+5. Rival Submissions of Learned Counsel
+   - Arguments advanced by Learned Counsel for parties / Public Prosecutor.
 
-6. Orders / Directions Mentioned
-   - Directions issued by the Hon'ble Bench as stated in the record.
+6. Findings of the Bench & Legal Principles
+   - Judicial reasoning, evaluation of evidence, and applicable doctrines (e.g. presumption of innocence, two-views theory).
 
-7. Important Dates
-   - Next hearing and compliance dates as communicated by the Bench.
+7. Operative Order & Dictation Directions
+   - Final disposal, relief granted, setting aside / restoration, or custody release directions.
 
-8. Transcript Reference
+8. Verbatim Key Dictation Excerpt
    "{transcript.strip()}"
 """

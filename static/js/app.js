@@ -355,21 +355,54 @@ document.addEventListener("DOMContentLoaded", () => {
       { regex: /(?<=[.,;:?!])\s*\bspace\b/gi, replacement: " " },
       { regex: /\b(tab\s+space|tab\s+key|indent)\b/gi, replacement: "    " },
 
-      // 13. Common Courtroom Witness & Exhibit Shorthand
+      // 13. Kinship, Parentage, Marital Status & Residency Shorthand
+      { regex: /\b(son\s+of|s\s*[/.]\s*o\.?)\b/gi, replacement: "S/o." },
+      { regex: /\b(daughter\s+of|d\s*[/.]\s*o\.?)\b/gi, replacement: "D/o." },
+      { regex: /\b(wife\s+of|w\s*[/.]\s*o\.?)\b/gi, replacement: "W/o." },
+      { regex: /\b(husband\s+of|h\s*[/.]\s*o\.?)\b/gi, replacement: "H/o." },
+      { regex: /\b(widow\s+of|wd\s*[/.]\s*o\.?|w\s*\/\s*d\s*\/\s*o\.?)\b/gi, replacement: "Wd/o." },
+      { regex: /\b(care\s+of|c\s*[/.]\s*o\.?)\b/gi, replacement: "C/o." },
+      { regex: /\b(resident\s+of|residing\s+at|residing\s+in|resident\s+at|r\s*[/.]\s*o\.?)\b/gi, replacement: "R/o." },
+      { regex: /\b(father\s+of|f\s*[/.]\s*o\.?)\b/gi, replacement: "F/o." },
+      { regex: /\b(mother\s+of|m\s*[/.]\s*o\.?)\b/gi, replacement: "M/o." },
+      { regex: /\b(also\s+known\s+as|a\.?\s*k\.?\s*a\.?)\b/gi, replacement: "alias" },
+
+      // 14. Common Courtroom Witness, Party, Case & Exhibit Shorthand
       { regex: /\b(p\s*w|prosecution\s*witness)\s*([0-9]+)\b/gi, replacement: "PW-$2" },
-      { regex: /\b(d\s*w|defence\s*witness)\s*([0-9]+)\b/gi, replacement: "DW-$2" },
+      { regex: /\b(d\s*w|defence\s*witness|defense\s*witness)\s*([0-9]+)\b/gi, replacement: "DW-$2" },
       { regex: /\b(c\s*w|court\s*witness)\s*([0-9]+)\b/gi, replacement: "CW-$2" },
       { regex: /\b(exhibit\s*p|ex\s*p)\s*([0-9]+)\b/gi, replacement: "Ex.P$2" },
       { regex: /\b(exhibit\s*d|ex\s*d)\s*([0-9]+)\b/gi, replacement: "Ex.D$2" },
       { regex: /\b(material\s*object|m\s*o)\s*([0-9]+)\b/gi, replacement: "MO-$2" },
-      { regex: /\b(accused\s*no\b|accused\s*number)\s*([0-9]+)\b/gi, replacement: "Accused No. $2" },
+      { regex: /\b(material\s*objects|m\s*o\s*s)\s*([0-9]+)\s*(?:to|-)\s*([0-9]+)\b/gi, replacement: "MOs $2 to $3" },
+      { regex: /\b(accused\s*no\b|accused\s*number)\s*([0-9]+)\s*(?:to|-)\s*(?:accused\s*no\b|accused\s*number\s*)?([0-9]+)\b/gi, replacement: "Accused Nos. $2 to $3" },
       { regex: /\b(accused\s*nos\b|accused\s*numbers)\s*([0-9]+)\b/gi, replacement: "Accused Nos. $2" },
-      { regex: /\bs\s*\/\s*o\b/gi, replacement: "S/o." },
-      { regex: /\bd\s*\/\s*o\b/gi, replacement: "D/o." },
-      { regex: /\bw\s*\/\s*o\b/gi, replacement: "W/o." },
-      { regex: /\br\s*\/\s*o\b/gi, replacement: "R/o." },
+      { regex: /\b(accused\s*no\b|accused\s*number|accused)\s*([0-9]+)\b/gi, replacement: "Accused No. $2" },
+      { regex: /\b(appellant\s*no\b|appellant\s*number|appellant)\s*([0-9]+)\b/gi, replacement: "Appellant No. $2" },
+      { regex: /\b(respondent\s*no\b|respondent\s*number|respondent)\s*([0-9]+)\b/gi, replacement: "Respondent No. $2" },
+      { regex: /\b(petitioner\s*no\b|petitioner\s*number|petitioner)\s*([0-9]+)\b/gi, replacement: "Petitioner No. $2" },
+      { regex: /\b(crime\s*no\b|crime\s*number)\s*([0-9]+)\s*\/\s*([0-9]+)\b/gi, replacement: "Crime No. $2/$3" },
+      { regex: /\b(crime\s*no\b|crime\s*number)\s*([0-9]+)\b/gi, replacement: "Crime No. $2" },
+      { regex: /\b(fir\s*no\b|fir\s*number)\s*([0-9]+)\s*(?:\/|of)\s*([0-9]+)\b/gi, replacement: "FIR No. $2/$3" },
+      { regex: /\b(fir\s*no\b|fir\s*number)\s*([0-9]+)\b/gi, replacement: "FIR No. $2" },
+      { regex: /\b(rigorous\s+imprisonment)\s*([0-9]+)\s*(month|months|year|years|day|days)\b/gi, replacement: "RI $2 $3" },
+      { regex: /\b(simple\s+imprisonment)\s*([0-9]+)\s*(month|months|year|years|day|days)\b/gi, replacement: "SI $2 $3" },
       { regex: /\bsection\s+([0-9]+[a-z]?)\s+ipc\b/gi, replacement: "Section $1 IPC" },
       { regex: /\bsection\s+([0-9]+[a-z]?)\s+crpc\b/gi, replacement: "Section $1 CrPC" },
+      { regex: /\bA\s*[-]?\s*([0-9]+)\s+to\s+A\s*[-]?\s*([0-9]+)\b/gi, replacement: "A$1 to A$2" },
+      { regex: /\b(?:police\s+station|p\.?\s*s\.?)\s+([A-Z][a-z]+)\b/gi, replacement: "P.S. $1" },
+      { regex: /\b(?:investigating\s+officer|i\.?\s*o\.?)\s*(?:p\.?\s*w\.?|pw)\s*[- ]?([0-9]+)\b/gi, replacement: "IO PW-$1" },
+      { regex: /\b(?:police\s+constable|p\.?\s*c\.?)\s*(?:\(\s*)?(?:p\.?\s*w\.?|pw)\s*[- ]?([0-9]+)(?:\s*\))?\b/gi, replacement: "PC (PW$1)" },
+      { regex: /\b(?:Hon(?:'ble)?\s+)?([A-Z][a-z]+(?:\s+[A-Z]\.?)*)\s+and\s+([A-Z][a-z]+(?:\s+[A-Z]\.?)*),?\s*J\.?\s*J\.?\b/gi, replacement: "$1 and $2, JJ." },
+      { regex: /\b(?:heading\s+)?judgment\b/gi, replacement: "JUDGMENT\n\n" },
+      { regex: /\b(?:heading\s+)?prosecution\s+case\b/gi, replacement: "PROSECUTION CASE\n\n" },
+      { regex: /\b(?:heading\s+)?facts\s*:\b/gi, replacement: "FACTS:\n\n" },
+      { regex: /\b(?:heading\s+)?held\s*:\b/gi, replacement: "HELD:\n\n" },
+      { regex: /\bthe\s+captioned\s+appeal\s+stands\s+disposed\s+of\s+in\s+the\s+aforesaid\s+terms[.,;:?!]*/gi, replacement: "The captioned appeal stands disposed of in the aforesaid terms." },
+      { regex: /\binterim\s+applications\s*,?\s*if\s+any\s*,?\s*shall\s+also\s+stand\s+disposed\s+of[.,;:?!]*/gi, replacement: "Interim applications, if any, shall also stand disposed of." },
+      { regex: /\bthe\s+appellants\s+are\s+directed\s+to\s+be\s+released\s+forthwith\s*,?\s*if\s+lying\s+in\s+custody[.,;:?!]*/gi, replacement: "The Appellants are directed to be released forthwith, if lying in custody." },
+      { regex: /\bthe\s+impugned\s+order\s+and\s+judgment\s+are\s+set\s+aside[.,;:?!]*/gi, replacement: "The impugned order and judgment are set aside." },
+      { regex: /\bconsequently\s*,?\s*the\s+appellants\s+are\s+acquitted\s+from\s+all\s+the\s+charges\s+levelled\s+upon\s+them[.,;:?!]*/gi, replacement: "Consequently, the Appellants are acquitted from all the charges levelled upon them." },
     ];
 
     for (const rule of stenoRules) {
@@ -386,8 +419,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/"\s+([^"\n]+?)\s+"/g, '"$1"') // clean spaces inside double quotes
       .replace(/,\s*,+/g, ",") // deduplicate consecutive commas
       .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n[ \t]+/g, "\n")
-      .replace(/(\n+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase()); // Capitalize words after newline
+      .replace(/(\n+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase()) // Capitalize words after newline
+      .replace(/\b(S|D|W|H|Wd|C|R|F|M)\/o\.\s*(?=[A-Za-z0-9])/g, "$1/o. ")
+      .replace(/\b(S|D|W|H|Wd|C|R|F|M)\/o\.\s*$/g, "$1/o.")
+      .replace(/\b(S|D|W|H|Wd|C|R|F|M)\/o\.\s*,\s*/g, "$1/o., ");
 
     // If pure whitespace or break, preserve it exactly
     if (/^[\r\n\t ]+$/.test(cleaned)) {

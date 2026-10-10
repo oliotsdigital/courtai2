@@ -34,8 +34,15 @@ LEGAL_TERMS_EN: List[str] = [
     "High Court",
     "Supreme Court",
     "Coram",
+    "Coram:",
+    "JJ.",
+    "J.",
+    "AOR",
+    "Advs.",
+    "Adv.",
+    "Advocate-on-Record",
     
-    # Parties, Accused & Witnesses (Court Transcript Conventions)
+    # Parties, Accused & Witnesses (Court Transcript Conventions from mallapa.txt)
     "Applicant",
     "Respondent",
     "Petitioner",
@@ -47,7 +54,9 @@ LEGAL_TERMS_EN: List[str] = [
     "Accused No. 1",
     "Accused Nos.",
     "Appellant No. 1",
+    "Appellant Nos.",
     "Complainant",
+    "Deceased",
     "Witness",
     "Prosecution Witness",
     "Defence Witness",
@@ -56,6 +65,8 @@ LEGAL_TERMS_EN: List[str] = [
     "DW-1", "DW-2", "CW-1", "CW-2",
     "Injured Witness",
     "Ocular Witness",
+    "Eye Witness",
+    "Eyewitness",
     "Hostile Witness",
     "Declared Hostile",
     "Interested Witness",
@@ -69,7 +80,16 @@ LEGAL_TERMS_EN: List[str] = [
     "Learned Senior Counsel",
     "Public Prosecutor",
     "Amicus Curiae",
-    "S/o.", "D/o.", "W/o.", "alias",
+    "Investigating Officer",
+    "I.O.",
+    "IO",
+    "Police Constable",
+    "PC",
+    "Police Station",
+    "P.S.",
+    "Police Out-Post",
+    "Out-Post Police",
+    "S/o.", "D/o.", "W/o.", "H/o.", "Wd/o.", "C/o.", "R/o.", "F/o.", "M/o.", "alias",
     
     # Exhibits, Material Objects & Forensic Evidence
     "Exhibit",
@@ -92,9 +112,16 @@ LEGAL_TERMS_EN: List[str] = [
     "Wound Certificate",
     "Injury Certificate",
     "Injury Report",
+    "Simple Injury Certificate",
     "MLC Register",
+    "Re-sealed Condition",
+    "Leading to Discovery",
+    "Haemorrhage Shock",
+    "Laceration of Liver Tissue",
+    "Blood Stained Mud",
+    "Sample Mud",
     
-    # Examination & Trial Procedure
+    # Examination & Trial Procedure (Judicial Standards from mallapa.txt)
     "Examination-in-Chief",
     "Cross-Examination",
     "Re-Examination",
@@ -106,16 +133,55 @@ LEGAL_TERMS_EN: List[str] = [
     "Sessions Case No.",
     "Charge-Sheet",
     "Committal Order",
+    "Order of Committal",
+    "Framed Charges",
+    "Pleaded Not Guilty and Claimed Trial",
+    "Closed the Prosecution Evidence",
     "Order of Acquittal",
     "Order of Conviction",
     "Impugned Judgment",
     "Assailed",
+    "Assailing",
     "Appreciation of Evidence",
     "Re-Appreciation of Evidence",
-    "Chain of Circumstances",
     "Presumption of Innocence",
     "Two-Views Theory",
+    "Legally Permissible View",
+    "Plausible View",
+    "Reasonable View",
+    "Illegality or Perversity",
+    "Error of Law or Fact",
+    "Miscarriage of Justice",
+    "Failure of Justice",
+    "Chain of Circumstances",
+    "Circumstantial Evidence",
+    "Direct Evidence",
+    "Panchsheel",
+    "Panchsheel of Circumstantial Evidence",
+    "Fails to Inspire Confidence",
+    "Not Worthy of Credit",
+    "Material Improvement",
+    "In Our Considered View",
+    "At the Outset",
+    "Rival Submissions",
+    "Self-Admitted",
+    "Semi-Conscious",
+    "Homicidal Death",
+    "Setting Aside",
+    "Stands Restored",
+    "Released Forthwith",
     "Leave granted.",
+    
+    # Judicial Headings & Operative Dictation Closings
+    "JUDGMENT",
+    "PROSECUTION CASE",
+    "FACTS:",
+    "HELD:",
+    "The captioned appeal stands disposed of in the aforesaid terms.",
+    "Interim applications, if any, shall also stand disposed of.",
+    "The Appellants are directed to be released forthwith, if lying in custody.",
+    "The impugned order and judgment are set aside.",
+    "Consequently, the Appellants are acquitted from all the charges levelled upon them.",
     
     # Filings & Pleadings
     "Affidavit",
@@ -238,14 +304,12 @@ def get_legal_prompt_context(language_code: Optional[str] = None) -> str:
     """
     return (
         "Official judicial stenographer verbatim record of Judge's oral statement, court dictation, and judgment in Indian English: "
-        "Hon'ble Court, Judge, Rajesh Bindal, J., S.C. Sharma, J., Principal Sessions Judge, JMFC, CJM, "
-        "PW-1 to PW-10, DW-1, CW-1, A1 to A8, Accused No. 1, S/o., D/o., W/o., alias, "
-        "Ex.P1 to Ex.P21, Ex.D1, MO-1 to MO-17, Inquest Mahazar, Seizure Mahazar, Panchanama, "
-        "FSL report, post-mortem report, wound certificate, ante-mortem injuries, cross-examination, Examination-in-Chief, "
-        "Section 302 read with Section 34, Sections 147, 148, 149, 302, 307, 326, 341, 504, 506B IPC, "
-        "Section 235 CrPC, RI 1 month, RI 6 months, RI 5 years, fine of ₹ 1,500/-, period already undergone, "
-        "mens rea, actus reus, per contra, inter se, prima facie, FIR, Crime No., Criminal Appeal No., Sessions Case No. "
-        "Transcribe verbatim as spoken without translation. Output strictly in Indian English."
+        "Mallappa S/o. Ningappa Kanner, Hon'ble Court, Bela M. Trivedi and S.C. Sharma, JJ., Rajesh Bindal, J., Principal Sessions Judge, JMFC, P.S. Shorapur, IO PW-10, PC (PW9), "
+        "PW-1 to PW-10, DW-1, CW-1, A1 to A8, Accused Nos. 1 to 5, S/o., D/o., W/o., H/o., Wd/o., C/o., R/o., F/o., M/o., alias, "
+        "Ex.P1 to Ex.P21, Ex.D1, MO-1 to MO-17, Inquest Mahazar, Seizure Mahazar, scene of offence, FSL report, post-mortem report, wound certificate, ante-mortem injuries, "
+        "Sections 147, 148, 149, 302, 307 and 504 IPC, Section 302 read with Section 34 of the Indian Penal Code, Section 235 CrPC, "
+        "two-views theory, presumption of innocence, chain of circumstances, per contra, inter se, FIR, Crime No. 78/97, Criminal Appeal No. 1162 of 2011, "
+        "The captioned appeal stands disposed of in the aforesaid terms. Transcribe verbatim as spoken without translation. Output strictly in Indian English."
     )
 
 
@@ -320,20 +384,42 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     for pattern, replacement in acronym_vernacular:
         normalized = pattern.sub(replacement, normalized)
 
-    # 5. Witness & Accused Formatting (Court Transcript Standards from english_data_1.txt & english_data_2.txt)
-    witness_patterns: List[Tuple[re.Pattern, str]] = [
-        (re.compile(r"\b(?:P\.?\s*W\.?|Prosecution\s+Witness)\s*[- ]?(\d+)\b", re.IGNORECASE), r"PW-\1"),
-        (re.compile(r"\b(?:D\.?\s*W\.?|Defence\s+Witness)\s*[- ]?(\d+)\b", re.IGNORECASE), r"DW-\1"),
-        (re.compile(r"\b(?:C\.?\s*W\.?|Court\s+Witness)\s*[- ]?(\d+)\b", re.IGNORECASE), r"CW-\1"),
-        (re.compile(r"\bA\s*[-]?\s*(\d+)\s+to\s+A\s*[-]?\s*(\d+)\b", re.IGNORECASE), r"A\1 to A\2"),
-        (re.compile(r"\b(?:accused|accused\s+no\.?)\s*(\d+)\b", re.IGNORECASE), r"Accused No. \1"),
-        (re.compile(r"\b(?:appellant|appellant\s+no\.?)\s*(\d+)\b", re.IGNORECASE), r"Appellant No. \1"),
-        (re.compile(r"\b(?:son\s+of|s\s*/\s*o\.?)\s+", re.IGNORECASE), "S/o. "),
-        (re.compile(r"\b(?:daughter\s+of|d\s*/\s*o\.?)\s+", re.IGNORECASE), "D/o. "),
-        (re.compile(r"\b(?:wife\s+of|w\s*/\s*o\.?)\s+", re.IGNORECASE), "W/o. "),
+    # 5. Kinship, Parentage, Marital Status & Residency (Standard Indian Judicial Records)
+    kinship_patterns: List[Tuple[re.Pattern, str]] = [
+        (re.compile(r"\b(?:son\s+of|s\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "S/o."),
+        (re.compile(r"\b(?:daughter\s+of|d\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "D/o."),
+        (re.compile(r"\b(?:wife\s+of|w\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "W/o."),
+        (re.compile(r"\b(?:husband\s+of|h\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "H/o."),
+        (re.compile(r"\b(?:widow\s+of|wd\s*[/.]\s*o\.?|w\s*/\s*d\s*/\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "Wd/o."),
+        (re.compile(r"\b(?:care\s+of|c\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "C/o."),
+        (re.compile(r"\b(?:resident\s+of|residing\s+at|residing\s+in|resident\s+at|r\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "R/o."),
+        (re.compile(r"\b(?:father\s+of|f\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "F/o."),
+        (re.compile(r"\b(?:mother\s+of|m\s*[/.]\s*o\.?)(?=\s|[.,;:?!]|$)", re.IGNORECASE), "M/o."),
         (re.compile(r"\b(?:a\.?\s*k\.?\s*a\.?|also\s+known\s+as)\b", re.IGNORECASE), "alias"),
     ]
-    for pattern, replacement in witness_patterns:
+    for pattern, replacement in kinship_patterns:
+        normalized = pattern.sub(replacement, normalized)
+
+    # 5b. Witness & Party Formatting (Court Transcript Standards from english_data_1.txt & english_data_2.txt)
+    party_patterns: List[Tuple[re.Pattern, str]] = [
+        (re.compile(r"\b(?:P\.?\s*W\.?|Prosecution\s+Witness)\s*[- ]?(\d+)\b", re.IGNORECASE), r"PW-\1"),
+        (re.compile(r"\b(?:D\.?\s*W\.?|Defence\s+Witness|Defense\s+Witness)\s*[- ]?(\d+)\b", re.IGNORECASE), r"DW-\1"),
+        (re.compile(r"\b(?:C\.?\s*W\.?|Court\s+Witness)\s*[- ]?(\d+)\b", re.IGNORECASE), r"CW-\1"),
+        (re.compile(r"\bA\s*[-]?\s*(\d+)\s+to\s+A\s*[-]?\s*(\d+)\b", re.IGNORECASE), r"A\1 to A\2"),
+        (re.compile(r"\b(?:accused\s*(?:no\.?|nos\.?|numbers?)|accused)\s*(\d+)\s*(?:to|-)\s*(?:(?:accused\s*(?:no\.?|nos\.?|numbers?)|accused)\s*)?(\d+)\b", re.IGNORECASE), r"Accused Nos. \1 to \2"),
+        (re.compile(r"\b(?:accused\s+(?:nos\.?|numbers))\s*(\d+(?:,\s*\d+)*(?:\s+and\s+\d+))\b", re.IGNORECASE), r"Accused Nos. \1"),
+        (re.compile(r"\b(?:accused\s+(?:no\.?|number)|accused)\s*(\d+)\b", re.IGNORECASE), r"Accused No. \1"),
+        (re.compile(r"\b(?:appellants?\s*(?:no\.?|nos\.?|numbers?)|appellant)\s*(\d+)\s*(?:to|-)\s*(?:(?:appellants?\s*(?:no\.?|nos\.?|numbers?)|appellant)\s*)?(\d+)\b", re.IGNORECASE), r"Appellant Nos. \1 to \2"),
+        (re.compile(r"\b(?:appellants?\s+(?:no\.?|number)|appellant)\s*(\d+)\b", re.IGNORECASE), r"Appellant No. \1"),
+        (re.compile(r"\b(?:respondents?\s*(?:no\.?|nos\.?|numbers?)|respondent)\s*(\d+)\s*(?:to|-)\s*(?:(?:respondents?\s*(?:no\.?|nos\.?|numbers?)|respondent)\s*)?(\d+)\b", re.IGNORECASE), r"Respondent Nos. \1 to \2"),
+        (re.compile(r"\b(?:respondents?\s+(?:no\.?|number)|respondent)\s*(\d+)\b", re.IGNORECASE), r"Respondent No. \1"),
+        (re.compile(r"\b(?:petitioners?\s*(?:no\.?|nos\.?|numbers?)|petitioner)\s*(\d+)\s*(?:to|-)\s*(?:(?:petitioners?\s*(?:no\.?|nos\.?|numbers?)|petitioner)\s*)?(\d+)\b", re.IGNORECASE), r"Petitioner Nos. \1 to \2"),
+        (re.compile(r"\b(?:petitioners?\s+(?:no\.?|number)|petitioner)\s*(\d+)\b", re.IGNORECASE), r"Petitioner No. \1"),
+        (re.compile(r"\b(?:plaintiffs?\s+(?:no\.?|number)|plaintiff)\s*(\d+)\b", re.IGNORECASE), r"Plaintiff No. \1"),
+        (re.compile(r"\b(?:defendants?\s+(?:no\.?|number)|defendant)\s*(\d+)\b", re.IGNORECASE), r"Defendant No. \1"),
+        (re.compile(r"\b(?:non[- ]applicants?\s+(?:no\.?|number)|non[- ]applicant)\s*(\d+)\b", re.IGNORECASE), r"Non-Applicant No. \1"),
+    ]
+    for pattern, replacement in party_patterns:
         normalized = pattern.sub(replacement, normalized)
 
     # 6. Exhibits & Material Objects (e.g. Ex.P1 to Ex.P21, Ex.D1, MO-1 to MO-17)
@@ -346,7 +432,7 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     for pattern, replacement in exhibit_patterns:
         normalized = pattern.sub(replacement, normalized)
 
-    # 7. Forensics, Medical Evidence & Procedural Stages
+    # 7. Forensics, Medical Evidence & Procedural Stages (mallapa.txt)
     forensic_patterns: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"\bpost\s*mortem\b", re.IGNORECASE), "post-mortem"),
         (re.compile(r"\bante\s*mortem\b", re.IGNORECASE), "ante-mortem"),
@@ -357,6 +443,15 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
         (re.compile(r"\bwound\s+certificate\b", re.IGNORECASE), "wound certificate"),
         (re.compile(r"\binquest\s+mahazar\b", re.IGNORECASE), "inquest mahazar"),
         (re.compile(r"\bseizure\s+mahazar\b", re.IGNORECASE), "seizure mahazar"),
+        (re.compile(r"\bscene\s+of\s+offence\b", re.IGNORECASE), "scene of offence"),
+        (re.compile(r"\bre\s*[- ]\s*sealed\s+condition\b", re.IGNORECASE), "re-sealed condition"),
+        (re.compile(r"\bleading\s+to\s+discovery\b", re.IGNORECASE), "leading to discovery"),
+        (re.compile(r"\bhomicidal\s+death\b", re.IGNORECASE), "homicidal death"),
+        (re.compile(r"\blaceration\s+of\s+liver\s+tissue\b", re.IGNORECASE), "laceration of liver tissue"),
+        (re.compile(r"\bhaemorrhage\s+shock\b", re.IGNORECASE), "haemorrhage shock"),
+        (re.compile(r"\b(?:P\.?\s*S\.?|police\s+station)\s+([A-Za-z]+)\b", re.IGNORECASE), lambda m: f"P.S. {m.group(1).capitalize()}"),
+        (re.compile(r"\b(?:I\.?\s*O\.?|investigating\s+officer)\s*(?:P\.?\s*W\.?|PW)\s*[- ]?(\d+)\b", re.IGNORECASE), r"IO PW-\1"),
+        (re.compile(r"\b(?:P\.?\s*C\.?|police\s+constable)\s*(?:\(\s*)?(?:P\.?\s*W\.?|PW)\s*[- ]?(\d+)(?:\s*\))?\b", re.IGNORECASE), r"PC (PW\1)"),
         (re.compile(r"\bF\.?S\.?L\.?\b", re.IGNORECASE), "FSL"),
         (re.compile(r"\bJ\.?M\.?F\.?C\.?\b", re.IGNORECASE), "JMFC"),
         (re.compile(r"\bC\.?J\.?M\.?\b", re.IGNORECASE), "CJM"),
@@ -368,6 +463,12 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
 
     # 8. English Statutory Sections & Provisions
     section_patterns: List[Tuple[re.Pattern, str]] = [
+        (re.compile(r"\b(?:sections?|secs?\.?)\s+(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s+and\s+(\d+)\s+(?:of\s+(?:the\s+)?(?:IPC|Indian\s+Penal\s+Code))\b", re.IGNORECASE), r"Sections \1, \2, \3, \4, \5 and \6 of the Indian Penal Code"),
+        (re.compile(r"\b(?:sections?|secs?\.?)\s+(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s+and\s+(\d+)\s+(?:of\s+(?:the\s+)?(?:IPC|Indian\s+Penal\s+Code))\b", re.IGNORECASE), r"Sections \1, \2, \3, \4 and \5 of the Indian Penal Code"),
+        (re.compile(r"\b(?:section|sec\.?)\s+(\d+)\s+read\s+with\s+(?:section|sec\.?)\s+(\d+)\s+(?:of\s+(?:the\s+)?(?:IPC|Indian\s+Penal\s+Code))\b", re.IGNORECASE), r"Section \1 read with Section \2 of the Indian Penal Code"),
+        (re.compile(r"(^|[.!?\n]\s*)under\s+sections?\s+(\d+)\s+code\s+of\s+criminal\s+procedure\b", re.IGNORECASE), r"\1Under Section \2 Code of Criminal Procedure"),
+        (re.compile(r"(?<!^)(?<![.!?\n]\s)\bunder\s+sections?\s+(\d+)\s+code\s+of\s+criminal\s+procedure\b", re.IGNORECASE), r"under Section \1 Code of Criminal Procedure"),
+        (re.compile(r"\b(?:section|sec\.?)\s+(\d+)\s+code\s+of\s+criminal\s+procedure\b", re.IGNORECASE), r"Section \1 Code of Criminal Procedure"),
         (re.compile(r"\b(?:section|sec\.?)\s+one\s+forty[- ]?four\b", re.IGNORECASE), "Section 144"),
         (re.compile(r"\b(?:section|sec\.?)\s+four\s+twenty\b", re.IGNORECASE), "Section 420"),
         (re.compile(r"\b(?:section|sec\.?)\s+(?:three\s+zero\s+two|three\s+hundred\s+(?:and\s+)?two)\b", re.IGNORECASE), "Section 302"),
@@ -376,7 +477,8 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
         (re.compile(r"\b(?:section|sec\.?)\s+four\s+thirty[- ]?nine\b", re.IGNORECASE), "Section 439"),
         (re.compile(r"\bread\s+with\s+sec(?:tion)?\.?\s*(\d+[A-Z]?)\b", re.IGNORECASE), r"read with Section \1"),
         (re.compile(r"\bu\s*/\s*s\s*(\d+[A-Z]?)\b", re.IGNORECASE), r"U/s \1"),
-        (re.compile(r"\bunder\s+sec(?:tion)?\.?\s+(\d+[A-Z]?)\b", re.IGNORECASE), r"under Section \1"),
+        (re.compile(r"(^|[.!?\n]\s*)under\s+sec(?:tion)?\.?\s+(\d+[A-Z]?)\b", re.IGNORECASE), r"\1Under Section \2"),
+        (re.compile(r"(?<!^)(?<![.!?\n]\s)\bunder\s+sec(?:tion)?\.?\s+(\d+[A-Z]?)\b"), r"under Section \1"),
         (re.compile(r"\bunder\s+sec(?:tions)?\.?\s+(\d+[A-Z]?(?:[,\s]+(?:\d+[A-Z]?|and))+)\b", re.IGNORECASE), r"under Sections \1"),
         (re.compile(r"\bsection\s+(\d+[A-Z]?)\b", re.IGNORECASE), r"Section \1"),
         (re.compile(r"\bsec(?:tion)?\.?\s+(\d+[A-Z]?)\b", re.IGNORECASE), r"Section \1"),
@@ -389,12 +491,19 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     for pattern, replacement in section_patterns:
         normalized = pattern.sub(replacement, normalized)
 
-    # 9. Case Numbers & Headings (e.g. Criminal Appeal No. 1363/2005, Crime No. 78/97)
+    # 9. Case Numbers & Headings (e.g. Criminal Appeal No. 1363/2005, Crime No. 78/97, FIR No. 12/2020)
     case_patterns: List[Tuple[re.Pattern, str]] = [
-        (re.compile(r"\b(?:crl\.?\s*a(?:ppl|ppeal)?\.?|criminal\s+appeal)\s*(?:no\.?)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"Criminal Appeal No. \1/\2"),
-        (re.compile(r"\bsessions\s+case\s*(?:no\.?)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"Sessions Case No. \1/\2"),
-        (re.compile(r"\bcrime\s*(?:no\.?)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"Crime No. \1/\2"),
-        (re.compile(r"\bleave\s+granted(?:\.|\b)", re.IGNORECASE), "Leave granted."),
+        (re.compile(r"\b(?:crl\.?\s*a(?:ppl|ppeal)?\.?|criminal\s+appeal)\s*(?:no\.?|number)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"Criminal Appeal No. \1/\2"),
+        (re.compile(r"\b(?:crl\.?\s*a(?:ppl|ppeal)?\.?|criminal\s+appeal)\s*(?:no\.?|number)\s+(\d+)\b", re.IGNORECASE), r"Criminal Appeal No. \1"),
+        (re.compile(r"\bsessions\s+case\s*(?:no\.?|number)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"Sessions Case No. \1/\2"),
+        (re.compile(r"\bsessions\s+case\s*(?:no\.?|number)\s+(\d+)\b", re.IGNORECASE), r"Sessions Case No. \1"),
+        (re.compile(r"\bcrime\s*(?:no\.?|number)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"Crime No. \1/\2"),
+        (re.compile(r"\bcrime\s*(?:no\.?|number)\s+(\d+)\b", re.IGNORECASE), r"Crime No. \1"),
+        (re.compile(r"\b(?:f\.?i\.?r\.?|first\s+information\s+report)\s*(?:no\.?|number)?\s*(\d+)\s*(?:/|of)\s*(\d+)\b", re.IGNORECASE), r"FIR No. \1/\2"),
+        (re.compile(r"\b(?:f\.?i\.?r\.?|first\s+information\s+report)\s*(?:no\.?|number)\s+(\d+)\b", re.IGNORECASE), r"FIR No. \1"),
+        (re.compile(r"\b(?:s\.?l\.?p\.?|special\s+leave\s+petition)\s*(?:no\.?|number)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"SLP No. \1/\2"),
+        (re.compile(r"\b(?:w\.?p\.?|writ\s+petition)\s*(?:no\.?|number)?\s*(\d+)\s*/\s*(\d+)\b", re.IGNORECASE), r"Writ Petition No. \1/\2"),
+        (re.compile(r"\bleave\s+granted[.,;:?!]*", re.IGNORECASE), "Leave granted."),
     ]
     for pattern, replacement in case_patterns:
         normalized = pattern.sub(replacement, normalized)
@@ -403,6 +512,8 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     sentencing_patterns: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"\b(?:R\.?\s*I\.?|rigorous\s+imprisonment)\s*(\d+)\s*(month|months|year|years|day|days)\b", re.IGNORECASE), r"RI \1 \2"),
         (re.compile(r"\b(?:S\.?\s*I\.?|simple\s+imprisonment)\s*(\d+)\s*(month|months|year|years|day|days)\b", re.IGNORECASE), r"SI \1 \2"),
+        (re.compile(r"\brigorous\s+imprisonment\b", re.IGNORECASE), "RI"),
+        (re.compile(r"\bsimple\s+imprisonment\b", re.IGNORECASE), "SI"),
         (re.compile(r"\bfine\s+of\s+(?:Rs\.?|INR|'|`)\s*(\d+(?:,\d+)*(?:\/-)?)\b", re.IGNORECASE), r"fine of ₹ \1"),
         (re.compile(r"\bto\s+further\s+undergo\s+R\.?\s*I\.?\b", re.IGNORECASE), "to further undergo RI"),
         (re.compile(r"\bperiod\s+already\s+undergone\b", re.IGNORECASE), "period already undergone"),
@@ -419,6 +530,22 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
         (re.compile(r"\bprima\s+facie\b", re.IGNORECASE), "prima facie"),
         (re.compile(r"\bsuo\s+motu\b", re.IGNORECASE), "suo motu"),
         (re.compile(r"\bres\s+judicata\b", re.IGNORECASE), "res judicata"),
+        (re.compile(r"\b(?:two[- ]views?|two[- ]view)\s+theory\b", re.IGNORECASE), "two-views theory"),
+        (re.compile(r"\bpanchsheel\s+of\s+circumstantial\s+evidence\b", re.IGNORECASE), "Panchsheel of circumstantial evidence"),
+        (re.compile(r"\bpanchsheel\b", re.IGNORECASE), "Panchsheel"),
+        (re.compile(r"\bpresumption\s+of\s+innocence\b", re.IGNORECASE), "presumption of innocence"),
+        (re.compile(r"\bchain\s+of\s+circumstances\b", re.IGNORECASE), "chain of circumstances"),
+        (re.compile(r"\bcircumstantial\s+evidence\b", re.IGNORECASE), "circumstantial evidence"),
+        (re.compile(r"\bdirect\s+evidence\b", re.IGNORECASE), "direct evidence"),
+        (re.compile(r"\bin\s+our\s+considered\s+view\b", re.IGNORECASE), "In our considered view"),
+        (re.compile(r"\bat\s+the\s+outset\b", re.IGNORECASE), "At the outset"),
+        (re.compile(r"\brival\s+submissions\b", re.IGNORECASE), "Rival submissions"),
+        (re.compile(r"\bfails?\s+to\s+inspire\s+confidence\b", re.IGNORECASE), "fails to inspire confidence"),
+        (re.compile(r"\bnot\s+worthy\s+of\s+credit\b", re.IGNORECASE), "not worthy of credit"),
+        (re.compile(r"\bmaterial\s+improvements?\b", re.IGNORECASE), "material improvement"),
+        (re.compile(r"\bsetting\s+aside\b", re.IGNORECASE), "setting aside"),
+        (re.compile(r"\bstands?\s+restored\b", re.IGNORECASE), "stands restored"),
+        (re.compile(r"\breleased\s+forthwith\b", re.IGNORECASE), "released forthwith"),
     ]
     for pattern, replacement in latin_patterns:
         normalized = pattern.sub(replacement, normalized)
@@ -436,7 +563,7 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     for pattern, replacement in acronym_patterns:
         normalized = pattern.sub(replacement, normalized)
 
-    # 13. English Court Honorifics
+    # 13. English Court Honorifics, Coram, Headings & Operative Closings
     honorific_patterns: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"\b(?:honourable\s+court|honorable\s+court|hon'ble\s+court)\b", re.IGNORECASE), "Hon'ble Court"),
         (re.compile(r"\blearned\s+counsel\b", re.IGNORECASE), "Learned Counsel"),
@@ -444,6 +571,17 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
         (re.compile(r"\blearned\s+advocate\b", re.IGNORECASE), "Learned Advocate"),
         (re.compile(r"\bpublic\s+prosecutor\b", re.IGNORECASE), "Public Prosecutor"),
         (re.compile(r"\bamicus\s+curiae\b", re.IGNORECASE), "Amicus Curiae"),
+        (re.compile(r"\b(?:Hon(?:'ble)?\s+)?([A-Za-z.\s]+?)\s+and\s+([A-Za-z.\s]+?),?\s*J\.?\s*J\.?[.,;:?!]*", re.IGNORECASE), lambda m: f"{' '.join('.'.join(p.upper() if len(p) <= 2 else p.capitalize() for p in w.split('.')) if '.' in w else w.capitalize() for w in m.group(1).split())} and {' '.join('.'.join(p.upper() if len(p) <= 2 else p.capitalize() for p in w.split('.')) if '.' in w else w.capitalize() for w in m.group(2).split())}, JJ."),
+        (re.compile(r"\b([A-Z]\.?\s*[A-Z]\.?\s*[A-Z][a-z]+),?\s*J(?:\.|\b)[.,;:?!]*", re.IGNORECASE), r"\1, J."),
+        (re.compile(r"^(?:(?:HEADING|HEADING:)\s*)?JUDGMENT\b", re.IGNORECASE | re.MULTILINE), "JUDGMENT"),
+        (re.compile(r"^(?:(?:HEADING|HEADING:)\s*)?PROSECUTION\s+CASE\b", re.IGNORECASE | re.MULTILINE), "PROSECUTION CASE"),
+        (re.compile(r"^(?:(?:HEADING|HEADING:)\s*)?FACTS\s*:\b", re.IGNORECASE | re.MULTILINE), "FACTS:"),
+        (re.compile(r"^(?:(?:HEADING|HEADING:)\s*)?HELD\s*:\b", re.IGNORECASE | re.MULTILINE), "HELD:"),
+        (re.compile(r"\bthe\s+captioned\s+appeal\s+stands\s+disposed\s+of\s+in\s+the\s+aforesaid\s+terms[.,;:?!]*", re.IGNORECASE), "The captioned appeal stands disposed of in the aforesaid terms."),
+        (re.compile(r"\binterim\s+applications\s*,?\s*if\s+any\s*,?\s*shall\s+also\s+stand\s+disposed\s+of[.,;:?!]*", re.IGNORECASE), "Interim applications, if any, shall also stand disposed of."),
+        (re.compile(r"\bthe\s+appellants\s+are\s+directed\s+to\s+be\s+released\s+forthwith\s*,?\s*if\s+lying\s+in\s+custody[.,;:?!]*", re.IGNORECASE), "The Appellants are directed to be released forthwith, if lying in custody."),
+        (re.compile(r"\bthe\s+impugned\s+order\s+and\s+judgment\s+are\s+set\s+aside[.,;:?!]*", re.IGNORECASE), "The impugned order and judgment are set aside."),
+        (re.compile(r"\bconsequently\s*,?\s*the\s+appellants\s+are\s+acquitted\s+from\s+all\s+the\s+charges\s+levelled\s+upon\s+them[.,;:?!]*", re.IGNORECASE), "Consequently, the Appellants are acquitted from all the charges levelled upon them."),
     ]
     for pattern, replacement in honorific_patterns:
         normalized = pattern.sub(replacement, normalized)
@@ -463,13 +601,18 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
 
     # 15. Re-tighten legal abbreviations & citations after punctuation formatting
     normalized = re.sub(r"\bEx\.\s*([PD]\d+)\b", r"Ex.\1", normalized)
-    normalized = re.sub(r"\bS\s*/\s*o\.\s*", "S/o. ", normalized)
-    normalized = re.sub(r"\bD\s*/\s*o\.\s*", "D/o. ", normalized)
-    normalized = re.sub(r"\bW\s*/\s*o\.\s*", "W/o. ", normalized)
-    normalized = re.sub(r"\b([A-Z])\.\s+([A-Z])\.\s+([A-Z])\.", r"\1.\2.\3.", normalized)
-    normalized = re.sub(r"\b([A-Z])\.\s+([A-Z])\.", r"\1.\2.", normalized)
-    normalized = re.sub(r"\.{2,}", ".", normalized)
-    normalized = re.sub(r",\s*J\s*\.", ", J.", normalized)
+    normalized = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)\s*/\s*o\.\s*(?=[A-Za-z0-9])", r"\1/o. ", normalized)
+    normalized = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)\s*/\s*o\.\s*$", r"\1/o.", normalized)
+    normalized = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)\s*/\s*o\.\s*,\s*", r"\1/o., ", normalized)
+    normalized = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)/o\.\s*([a-z])", lambda m: f"{m.group(1)}/o. {m.group(2).upper()}", normalized)
+    normalized = re.sub(r"\b([A-Za-z])\.\s+([A-Za-z])\.\s+([A-Za-z])\.", lambda m: f"{m.group(1).upper()}.{m.group(2).upper()}.{m.group(3).upper()}.", normalized)
+    normalized = re.sub(r"\b([A-Za-z])\.\s+([A-Za-z])\.", lambda m: f"{m.group(1).upper()}.{m.group(2).upper()}.", normalized)
+    normalized = re.sub(r"\b(PW|DW|CW|MO)-\s*(\d+)\b", r"\1-\2", normalized)
+    normalized = re.sub(r"\b(Accused|Appellant|Respondent|Petitioner|Plaintiff|Defendant)\s+Nos?\.\s+(\d+)\s+(?:to|-)\s+(?:\1\s+Nos?\.\s+)?(\d+)\b", r"\1 Nos. \2 to \3", normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r"\b(Accused|Appellant|Respondent|Petitioner|Plaintiff|Defendant)\s+No\.\s+(\d+)\b", r"\1 No. \2", normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r",\s*J\s*\.+", ", J.", normalized)
+    normalized = re.sub(r"\b([A-Z]\.?\s*[A-Z]\.?\s*[A-Z][a-z]+),?\s*J\b\.+", r"\1, J.", normalized)
+    normalized = re.sub(r"(?<!\.)\.\.(?!\.)", ".", normalized)
     normalized = re.sub(r"₹\s*(\d)", r"₹ \1", normalized)
 
     # If the output consists purely of whitespace/breaks, preserve intentional break symbol

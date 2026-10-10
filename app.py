@@ -115,6 +115,32 @@ JUDICIAL_SAMPLES: Dict[str, Dict[str, str]] = {
             "5. The matter is adjourned to the next date of hearing. All parties to act on an authenticated copy of this order."
         ),
     },
+    "mallapa": {
+        "title": "Supreme Court Criminal Appeal (Mallappa v. State of Karnataka)",
+        "description": "Coram Bela M. Trivedi and S.C. Sharma, JJ.: A1 to A8, P.S. Shorapur, IO PW-10, Sections 147, 148, 149, 302, 307 and 504 IPC, Two-views theory, acquittal restored.",
+        "text": (
+            "Bela M. Trivedi and S.C. Sharma, JJ.\n"
+            "Leave granted.\n\n"
+            "JUDGMENT\n\n"
+            "S.C. Sharma, J.\n\n"
+            "1. The present appeals arise out of judgment dated 29.05.2009 passed by the High Court of Karnataka at Bangalore "
+            "in Criminal Appeal No. 1363/2005 reversing the judgment of acquittal dated 24.03.2005 passed by the Sessions Judge "
+            "Fast Track Court-I at Gulbarga in Sessions Case No. 70/1998, whereby the Appellants (Accused Nos. 3, 4 and 5) "
+            "were convicted under Sections 147, 148, 149, 302, 307 and 504 of the Indian Penal Code.\n\n"
+            "2. The prosecution case is that on 18.04.1997, at about 7:00 AM, in Shorapur town within the limits of P.S. Shorapur, "
+            "the Accused persons (A1 to A8), armed with axes, clubs and jambia, formed an unlawful assembly and assaulted Marthandappa "
+            "and PW-4. FIR was registered as Crime No. 78/97. The investigation was conducted by IO PW-10, and dead body sent for post-mortem "
+            "through PC (PW9). The doctor PW-5 opined the cause of death to be haemorrhage shock due to laceration of liver tissue resulting in homicidal death.\n\n"
+            "3. The prosecution examined PW-1 to PW-12, marked Ex.P1 to Ex.P21 and MOs 1 to 17. The Trial Court acquitted all accused under Section 235 Code of Criminal Procedure "
+            "holding that testimonies of ocular witnesses PW-2 and PW-3 failed to inspire confidence. On appeal by the State, the High Court reversed the acquittal.\n\n"
+            "4. In our considered view, the High Court erred in reversing the acquittal. The presumption of innocence is reinforced by an acquittal. "
+            "Under the two-views theory, where two plausible views are possible on appreciation of evidence, the view favouring the accused must be adopted. "
+            "The view taken by the Trial Court was a legally permissible view.\n\n"
+            "5. Consequently, the Appellants are acquitted from all the charges levelled upon them. The impugned order and judgment are set aside, "
+            "and the judgment of the Sessions Judge stands restored. The Appellants are directed to be released forthwith, if lying in custody. "
+            "The captioned appeal stands disposed of in the aforesaid terms. Interim applications, if any, shall also stand disposed of."
+        ),
+    },
 }
 
 
