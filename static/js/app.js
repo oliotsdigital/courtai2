@@ -255,18 +255,23 @@ document.addEventListener("DOMContentLoaded", () => {
   function appendToTranscript(existing, incoming) {
     if (incoming === undefined || incoming === null || incoming === "") return existing;
     if (!existing) {
-      return incoming.replace(/^[ \t]+/, "");
+      const trimmed = incoming.replace(/^[ \t]+/, "");
+      return trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : "";
     }
 
     // Pure paragraph break command
-    if (incoming === "\n\n") {
-      if (existing.endsWith("\n\n")) return existing;
-      if (existing.endsWith("\n")) return existing + "\n";
-      return existing + "\n\n";
+    if (incoming === "\n\n" || incoming === "\n\n\n" || incoming.trim() === "") {
+      if (incoming.includes("\n\n")) {
+        existing = existing.replace(/[ \t]+$/, "");
+        if (existing.endsWith("\n\n")) return existing;
+        if (existing.endsWith("\n")) return existing + "\n";
+        return existing + "\n\n";
+      }
     }
 
     // Pure line break command
     if (incoming === "\n") {
+      existing = existing.replace(/[ \t]+$/, "");
       if (existing.endsWith("\n")) return existing;
       return existing + "\n";
     }
@@ -277,30 +282,49 @@ document.addEventListener("DOMContentLoaded", () => {
       return existing + " ";
     }
 
-    // If incoming starts with paragraph breaks
+    // If incoming starts with paragraph breaks (\n\n)
     if (incoming.startsWith("\n\n")) {
-      const remainder = incoming.replace(/^\n+/, "");
+      existing = existing.replace(/[ \t]+$/, "");
+      const remainder = incoming.replace(/^\n+/, "").replace(/^[ \t]+/, "");
+      const capitalized = remainder ? remainder.charAt(0).toUpperCase() + remainder.slice(1) : "";
       if (existing.endsWith("\n\n")) {
-        return existing + remainder;
+        return existing + capitalized;
       } else if (existing.endsWith("\n")) {
-        return existing + "\n" + remainder;
+        return existing + "\n" + capitalized;
       } else {
-        return existing + "\n\n" + remainder;
+        return existing + "\n\n" + capitalized;
       }
     }
 
-    // If incoming starts with a single line break
+    // If incoming starts with a single line break (\n)
     if (incoming.startsWith("\n")) {
-      const remainder = incoming.replace(/^\n+/, "");
+      existing = existing.replace(/[ \t]+$/, "");
+      const remainder = incoming.replace(/^\n+/, "").replace(/^[ \t]+/, "");
+      const capitalized = remainder ? remainder.charAt(0).toUpperCase() + remainder.slice(1) : "";
       if (existing.endsWith("\n")) {
-        return existing + remainder;
+        return existing + capitalized;
       } else {
-        return existing + "\n" + remainder;
+        return existing + "\n" + capitalized;
       }
     }
 
-    // If existing text already ends with a newline, line break, or space
-    if (existing.endsWith("\n") || existing.endsWith(" ")) {
+    // If existing text ends with paragraph break (\n\n)
+    const existingClean = existing.replace(/[ \t]+$/, "");
+    if (existingClean.endsWith("\n\n")) {
+      const trimmed = incoming.replace(/^[ \t]+/, "");
+      const capitalized = trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : "";
+      return existingClean + capitalized;
+    }
+
+    // If existing text ends with a single line break (\n)
+    if (existingClean.endsWith("\n")) {
+      const trimmed = incoming.replace(/^[ \t]+/, "");
+      const capitalized = trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : "";
+      return existingClean + capitalized;
+    }
+
+    // If existing text ends with space
+    if (existing.endsWith(" ")) {
       return existing + incoming;
     }
 
@@ -369,8 +393,8 @@ document.addEventListener("DOMContentLoaded", () => {
       { regex: /\b(plus\s*sign)\b/gi, replacement: "+" },
       { regex: /\b(equals?\s*(?:to|sign)?)\b/gi, replacement: "=" },
 
-      // 12. Formatting breaks: Next paragraph, new paragraph, next line, new line, space, tab
-      { regex: /\b(start\s+(?:a\s+)?new\s+paragraph|start\s+(?:a\s+)?next\s+paragraph|a\s+next\s+paragraph|a\s+new\s+paragraph|next\s+paragraph|new\s+paragraph|paragraph\s+break)\b/gi, replacement: "\n\n" },
+      // 12. Formatting breaks: New paragraph, paragraph end, paragreph end, next paragraph, next line, space, tab
+      { regex: /(?:\s*[.,;:?!])?\s*\b(start\s+(?:a\s+)?new\s+paragraph|start\s+(?:a\s+)?next\s+paragraph|a\s+next\s+paragraph|a\s+new\s+paragraph|next\s+paragraphs?|new\s+paragraphs?|paragraphs?\s+break|paragraphs?\s+ends?|paragrephs?\s+ends?|paragrafs?\s+ends?|end\s+of\s+(?:the\s+)?paragraphs?|end\s+paragraphs?|close\s+paragraphs?|paragraphs?\s+closed?|paragraphs?\s+over|paragraphs?\s+completed?)\b(?:\s*[.,;:?!])?/gi, replacement: "\n\n" },
       { regex: /\b(start\s+(?:a\s+)?new\s+line|start\s+(?:a\s+)?next\s+line|a\s+next\s+line|a\s+new\s+line|next\s+line|new\s+line|line\s+break|press\s+enter|hit\s+enter)\b/gi, replacement: "\n" },
       { regex: /\b(blank\s+space|white\s+space|single\s+space|space\s+bar|give\s+(?:a\s+)?space|add\s+(?:a\s+)?space|insert\s+(?:a\s+)?space|a\s+space)\b/gi, replacement: " " },
       { regex: /(?<=[.,;:?!])\s*\bspace\b/gi, replacement: " " },
@@ -434,13 +458,14 @@ document.addEventListener("DOMContentLoaded", () => {
     cleaned = cleaned
       .replace(/([(\[{])\s+/g, "$1") // remove spaces after opening brackets
       .replace(/\s+([)\]}])/g, "$1") // remove spaces before closing brackets
-      .replace(/\s+([,.:;?!])/g, "$1") // remove spaces before punctuation
+      .replace(/[ \t]+([,.:;?!])/g, "$1") // remove spaces before punctuation
+      .replace(/(\n+)[ \t]*[,.:;?!]/g, "$1") // remove orphaned punctuation right after newlines
       .replace(/([,.:;?!])(?=[A-Za-z0-9])/g, "$1 ") // ensure space after punctuation if followed by word/number
       .replace(/([)\]}])(?=[A-Za-z0-9])/g, "$1 ") // ensure space after closing bracket if followed by word/number
       .replace(/"\s+([^"\n]+?)\s+"/g, '"$1"') // clean spaces inside double quotes
       .replace(/,\s*,+/g, ",") // deduplicate consecutive commas
       .replace(/[ \t]+\n/g, "\n")
-      .replace(/(\n+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase()) // Capitalize words after newline
+      .replace(/(\n+\s*)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase()) // Capitalize words after newline
       .replace(/\b(S|D|W|H|Wd|C|R|F|M)\/o\.\s*(?=[A-Za-z0-9])/g, "$1/o. ")
       .replace(/\b(S|D|W|H|Wd|C|R|F|M)\/o\.\s*$/g, "$1/o.")
       .replace(/\b(S|D|W|H|Wd|C|R|F|M)\/o\.\s*,\s*/g, "$1/o., ");
@@ -452,7 +477,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return " ";
     }
 
-    return cleaned.trim();
+    // Strip only horizontal spaces/tabs, preserving leading and trailing newlines
+    return cleaned.replace(/^[ \t]+/, "").replace(/[ \t]+$/, "");
   }
 
   // ==========================================

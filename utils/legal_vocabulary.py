@@ -595,8 +595,18 @@ def normalize_legal_terms(text: str, enabled: bool = True, language_code: Option
     )
     normalized = re.sub(r",\s*,+", ",", normalized)
 
-    # 14. Clean up spaces around punctuation
-    normalized = re.sub(r"\s+([.,;:?!])", r"\1", normalized)
+    # 13c. Standardize spoken 'new paragraph' and 'paragraph end' commands into '\n\n'
+    normalized = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:\s*[.,;:?!])?\s*(?:(?:start\s+)?(?:a\s+)?(?:next|new)\s+paragraphs?|paragraphs?\s+break|paragraphs?\s+ends?|paragrephs?\s+ends?|paragrafs?\s+ends?|end\s+of\s+(?:the\s+)?paragraphs?|end\s+paragraphs?|close\s+paragraphs?|paragraphs?\s+closed?|paragraphs?\s+over|paragraphs?\s+completed?)(?:\s*[.,;:?!])?(?![A-Za-z0-9\u0900-\u097F])",
+        "\n\n",
+        normalized,
+        flags=re.IGNORECASE,
+    )
+    normalized = re.sub(r"(\n+\s*)([a-z])", lambda m: m.group(1) + m.group(2).upper(), normalized)
+
+    # 14. Clean up spaces around punctuation (preserve newlines)
+    normalized = re.sub(r"[ \t]+([.,;:?!])", r"\1", normalized)
+    normalized = re.sub(r"(\n+)[ \t]*[.,;:?!]", r"\1", normalized)
     normalized = re.sub(r"([.,;:?!])([A-Za-z0-9\u0900-\u097F])", r"\1 \2", normalized)
 
     # 15. Re-tighten legal abbreviations & citations after punctuation formatting

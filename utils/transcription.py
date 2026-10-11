@@ -216,6 +216,20 @@ def load_steno_rules(force_reload: bool = False) -> List[Tuple[re.Pattern, str, 
         ("next paragraph", "\n\n"),
         ("new paragraph", "\n\n"),
         ("paragraph break", "\n\n"),
+        ("paragraph end", "\n\n"),
+        ("paragreph end", "\n\n"),
+        ("paragraf end", "\n\n"),
+        ("paragraph ends", "\n\n"),
+        ("paragraphs end", "\n\n"),
+        ("end of paragraph", "\n\n"),
+        ("end of the paragraph", "\n\n"),
+        ("end paragraph", "\n\n"),
+        ("close paragraph", "\n\n"),
+        ("paragraph close", "\n\n"),
+        ("paragraph closed", "\n\n"),
+        ("paragraph over", "\n\n"),
+        ("paragraph complete", "\n\n"),
+        ("paragraph completed", "\n\n"),
         ("start a new line", "\n"),
         ("start new line", "\n"),
         ("a next line", "\n"),
@@ -327,6 +341,14 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
     for pat, repl in CONVERSATIONAL_GUARDS:
         processed = pat.sub(repl, processed)
 
+    # Step 2a: Explicit guarantee: Paragraph breaks ("new paragraph", "paragraph end", "paragreph end", etc.)
+    processed = re.sub(
+        r"(?<![A-Za-z0-9\u0900-\u097F])(?:\s*[.,;:?!])?\s*(?:(?:start\s+)?(?:a\s+)?(?:next|new)\s+paragraphs?|paragraphs?\s+break|paragraphs?\s+ends?|paragrephs?\s+ends?|paragrafs?\s+ends?|end\s+of\s+(?:the\s+)?paragraphs?|end\s+paragraphs?|close\s+paragraphs?|paragraphs?\s+closed?|paragraphs?\s+over|paragraphs?\s+completed?)(?:\s*[.,;:?!])?(?![A-Za-z0-9\u0900-\u097F])",
+        "\n\n",
+        processed,
+        flags=re.IGNORECASE,
+    )
+
     # Step 2: Apply steno command conversions from training JSONs
     rules = load_steno_rules()
     for pat, sym, _ in rules:
@@ -379,14 +401,6 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
         flags=re.IGNORECASE,
     )
 
-    # Step 2f: Explicit guarantee: Paragraph breaks ("next paragraph", "a new paragraph", "new paragraph", etc.)
-    processed = re.sub(
-        r"(?<![A-Za-z0-9\u0900-\u097F])(?:(?:start\s+)?(?:a\s+)?(?:next|new)\s+paragraphs?|paragraphs?\s+break)(?![A-Za-z0-9\u0900-\u097F])",
-        "\n\n",
-        processed,
-        flags=re.IGNORECASE,
-    )
-
     # Step 2g: Explicit guarantee: Line breaks ("next line", "new line", "a new line", "line break", etc.)
     processed = re.sub(
         r"(?<![A-Za-z0-9\u0900-\u097F])(?:(?:start\s+)?(?:a\s+)?(?:next|new)\s+lines?|lines?\s+break|press\s+enter|hit\s+enter)(?![A-Za-z0-9\u0900-\u097F])",
@@ -432,8 +446,10 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
     # 4b. Remove spaces before closing brackets
     processed = re.sub(r"\s+([)\]}])", r"\1", processed)
 
-    # 4c. Remove spaces before punctuation marks
-    processed = re.sub(r"\s+([.,;:?!])", r"\1", processed)
+    # 4c. Remove spaces before punctuation marks (preserve newlines)
+    processed = re.sub(r"[ \t]+([.,;:?!])", r"\1", processed)
+    # Remove any orphaned punctuation directly following newlines
+    processed = re.sub(r"(\n+)[ \t]*[.,;:?!]", r"\1", processed)
 
     # 4d. Ensure single space follows punctuation / closing brackets if followed by word/number
     processed = re.sub(r"([.,;:?!])([A-Za-z0-9\u0900-\u097F])", r"\1 \2", processed)
@@ -455,7 +471,7 @@ def process_voice_commands(text: str, enabled: bool = True) -> str:
 
     processed = re.sub(r"^(\s*)([a-z])", capitalize_match, processed)
     processed = re.sub(r"([.?!]\s+)([a-z])", capitalize_match, processed)
-    processed = re.sub(r"(\n+)([a-z])", capitalize_match, processed)
+    processed = re.sub(r"(\n+\s*)([a-z])", capitalize_match, processed)
 
     # 4h. Re-tighten legal kinship, witness, and party abbreviations
     processed = re.sub(r"\b(S|D|W|H|Wd|C|R|F|M)\s*/\s*o\.\s*(?=[A-Za-z0-9])", r"\1/o. ", processed)
